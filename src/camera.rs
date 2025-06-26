@@ -17,14 +17,18 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     samples_per_pixel: u32,
     pixel_samples_scale: f64,
+    max_depth: usize,
 }
 
 impl Camera {
-    pub fn ray_color(&self, r: &Ray, world: &dyn Hittable) -> Color {
+    pub fn ray_color(&self, r: &Ray, depth: usize, world: &dyn Hittable) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
         let mut rec = HitRecord::default();
         if world.hit(r, Interval::new(0.0, INFINITY), &mut rec) {
             let direction = Vec3::random_on_hemisphere(rec.normal);
-            return self.ray_color(&Ray::new(rec.p, direction), world) * 0.5;
+            return self.ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
         }
         let unit_direction = Vec3::unit_vector(r.direction());
         let a = 0.5 * (unit_direction.y() + 1.0);
@@ -44,6 +48,7 @@ impl Camera {
             pixel_delta_v: Vec3::new(0.0, 0.0, 0.0),
             samples_per_pixel: 0,
             pixel_samples_scale: 0.0,
+            max_depth: 0,
         };
         cam.initialize();
         cam
@@ -54,7 +59,7 @@ impl Camera {
         if self.image_height < 1 {
             self.image_height = 1;
         }
-        self.samples_per_pixel = 10;
+        self.samples_per_pixel = 100;
         self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
         self.center = Point3::new(0.0, 0.0, 0.0);
 
@@ -72,6 +77,7 @@ impl Camera {
             self.center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
 
         self.pixel00_loc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
+        self.max_depth = 10;
     }
 
     pub fn sample_square(&self) -> Vec3 {
@@ -110,7 +116,7 @@ impl Camera {
 
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(i, j);
-                    pixel_color += self.ray_color(&ray, world);
+                    pixel_color += self.ray_color(&ray, self.max_depth, world);
                 }
 
                 pixel_color *= self.pixel_samples_scale;
