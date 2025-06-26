@@ -44,6 +44,10 @@ fn main() -> io::Result<()> {
         camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
+    let path = std::path::Path::new("output/book1/image2.ppm");
+    let prefix = path.parent().unwrap();
+    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+
     let file = File::create("output/book1/image2.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
