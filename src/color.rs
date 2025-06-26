@@ -16,6 +16,10 @@ pub fn write_color<W: Write>(out: &mut W, pixel_color: &Color) -> io::Result<()>
     let g = pixel_color.y();
     let b = pixel_color.z();
 
+    let r = linear_to_gamma(r);
+    let g = linear_to_gamma(g);
+    let b = linear_to_gamma(b);
+
     let intensity = Interval::new(0.000, 0.999);
 
     let r_byte = (256.0 * intensity.clamp(r)) as u8;
