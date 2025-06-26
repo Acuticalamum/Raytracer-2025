@@ -16,8 +16,6 @@ use ray::Ray;
 use color::Color;
 use vec3::Vec3;
 
-
-
 /*pub fn ray_color(r: &Ray) -> Color {
     let unit_direction = Vec3::unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
