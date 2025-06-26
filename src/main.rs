@@ -26,11 +26,11 @@ use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 fn main() -> io::Result<()> {
-    let path = std::path::Path::new("output/book1/image8.ppm");
+    let path = std::path::Path::new("output/book1/image9.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book1/image8.ppm").expect("Failed to create file");
+    let file = File::create("output/book1/image9.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let mut world = HittableList::new();
