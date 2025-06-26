@@ -1,11 +1,11 @@
 use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
-use crate::ray::Ray;
-use crate::{color, rtweekend};
-use crate::vec3::{Point3, Vec3};
-use std::io::{self, Write};
 use crate::interval::Interval;
+use crate::ray::Ray;
 use crate::rtweekend::INFINITY;
+use crate::vec3::{Point3, Vec3};
+use crate::{color, rtweekend};
+use std::io::{self, Write};
 
 pub struct Camera {
     pub aspect_ratio: f64,
@@ -94,7 +94,11 @@ impl Camera {
     }
 
     pub fn render<W: Write>(&self, world: &dyn Hittable, writer: &mut W) -> io::Result<()> {
-        writeln!(writer, "P3\n{} {}\n255", self.image_width, self.image_height)?;
+        writeln!(
+            writer,
+            "P3\n{} {}\n255",
+            self.image_width, self.image_height
+        )?;
 
         for j in (0..self.image_height) {
             eprint!("\rScanlines remaining: {} ", j);

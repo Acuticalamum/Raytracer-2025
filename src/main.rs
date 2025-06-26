@@ -9,6 +9,7 @@ mod rtweekend;
 mod sphere;
 mod vec3;
 
+use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::rtweekend::INFINITY;
 use color::{Color, write_color};
@@ -16,14 +17,13 @@ use console::style;
 use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use interval::Interval;
 use ray::Ray;
 use sphere::Sphere;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::sync::Arc;
 use vec3::{Point3, Vec3};
-use interval::Interval;
-use crate::camera::Camera;
 
 fn main() -> io::Result<()> {
     let path = std::path::Path::new("output/book1/image6.ppm");
@@ -39,6 +39,6 @@ fn main() -> io::Result<()> {
 
     let cam = Camera::new(16.0 / 9.0, 400);
     cam.render(&world, &mut out)?;
-    
+
     Ok(())
 }
