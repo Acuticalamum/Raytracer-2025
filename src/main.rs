@@ -9,32 +9,24 @@ mod rtweekend;
 mod sphere;
 mod vec3;
 
+use crate::hittable::{HitRecord, Hittable};
+use crate::rtweekend::INFINITY;
 use color::{Color, write_color};
 use console::style;
+use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use ray::Ray;
+use sphere::Sphere;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
+use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
-    let oc = *center - r.origin();
-    let a = Vec3::dot(r.direction(), r.direction());
-    let b = -2.0 * Vec3::dot(r.direction(), oc);
-    let c = Vec3::dot(oc, oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    if discriminant < 0.0 {
-        return -1.0;
-    }
-    (-b - discriminant.sqrt()) / (2.0 * a)
-}
-
-pub fn ray_color(r: &Ray) -> Color {
-    let t = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        let N = Vec3::unit_vector(r.at(t) - Vec3::new(0.0, 0.0, -1.0));
-        return Color::new(N.x() + 1.0, N.y() + 1.0, N.z() + 1.0) * 0.5;
+pub fn ray_color(r: &Ray, world: &impl Hittable) -> Color {
+    let mut rec = HitRecord::default();
+    if world.hit(r, 0.0, INFINITY, &mut rec) {
+        return (Color::new(1.0, 1.0, 1.0) + rec.normal) * 0.5;
     }
     let unit_direction = Vec3::unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
@@ -61,12 +53,16 @@ fn main() -> io::Result<()> {
         camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
-    let path = std::path::Path::new("output/book1/image4.ppm");
+    let path = std::path::Path::new("output/book1/image5.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book1/image4.ppm").expect("Failed to create file");
+    let file = File::create("output/book1/image5.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
+
+    let mut world = HittableList::new();
+    world.add(Arc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Arc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     writeln!(out, "P3")?;
     writeln!(out, "{} {}", image_width, image_height)?;
@@ -82,7 +78,7 @@ fn main() -> io::Result<()> {
             let ray_direction = pixel_center - camera_center;
             let ray = Ray::new(camera_center.clone(), ray_direction);
 
-            let pixel_color = ray_color(&ray);
+            let pixel_color = ray_color(&ray, &world);
             write_color(&mut out, &pixel_color)?;
         }
     }
