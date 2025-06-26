@@ -22,6 +22,8 @@ pub fn ray_color(r: &Ray) -> Color {
     Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
 }
 
+
+
 fn main() {
     let path = std::path::Path::new("output/book1/image1.png");
     let prefix = path.parent().unwrap();
