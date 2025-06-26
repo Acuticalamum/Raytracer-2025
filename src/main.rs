@@ -18,7 +18,19 @@ use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use vec3::{Point3, Vec3};
 
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+    let oc = *center - r.origin();
+    let a = Vec3::dot(r.direction(), r.direction());
+    let b = -2.0 * Vec3::dot(r.direction(), oc);
+    let c = Vec3::dot(oc, oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant >= 0.0
+}
+
 pub fn ray_color(r: &Ray) -> Color {
+    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, &r) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
     let unit_direction = Vec3::unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
     Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
@@ -44,11 +56,11 @@ fn main() -> io::Result<()> {
         camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
-    let path = std::path::Path::new("output/book1/image2.ppm");
+    let path = std::path::Path::new("output/book1/image3.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book1/image2.ppm").expect("Failed to create file");
+    let file = File::create("output/book1/image3.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     writeln!(out, "P3")?;
