@@ -9,12 +9,13 @@ mod rtweekend;
 mod sphere;
 mod vec3;
 
-use color::Color;
+use color::{Color, write_color};
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use ray::Ray;
-use vec3::Vec3;
+use std::io::{self, Write};
+use vec3::{Point3, Vec3};
 
 pub fn ray_color(r: &Ray) -> Color {
     let unit_direction = Vec3::unit_vector(r.direction());
@@ -23,37 +24,42 @@ pub fn ray_color(r: &Ray) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image1.png");
-    let prefix = path.parent().unwrap();
-    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
+    let mut image_height = (image_width as f64 / aspect_ratio) as i32;
+    let image_height = if image_height < 1 { 1 } else { image_height };
+    let focal_length = 1.0;
+    let viewport_height = 2.0;
+    let viewport_width = viewport_height * (image_width as f64 / image_height as f64) as f64;
+    let camera_center = Point3::new(0.0, 0.0, 0.0);
 
-    let width = 256;
-    let height = 256;
-    // different from the book, we use image crate to create a .png image rather than outputting .ppm file, which is not widely used.
-    // anyway, you may output any image format you like.
-    let mut img: RgbImage = ImageBuffer::new(width, height);
+    let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
+    let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
 
-    let progress = if option_env!("CI").unwrap_or_default() == "true" {
-        ProgressBar::hidden()
-    } else {
-        ProgressBar::new((height * width) as u64)
-    };
+    let pixel_delta_u = viewport_u / (image_width as f64);
+    let pixel_delta_v = viewport_v / (image_height as f64);
 
-    for j in (0..height).rev() {
-        for i in 0..width {
-            let pixel = img.get_pixel_mut(i, j);
-            let r: f64 = (i as f64) / ((width - 1) as f64) * 255.999;
-            let g: f64 = (j as f64) / ((height - 1) as f64) * 255.999;
-            let b: f64 = 0.25 * 255.999;
-            *pixel = image::Rgb([r as u8, g as u8, b as u8]);
+    let viewport_upper_left =
+        camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+    let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
+
+    let mut out = io::stdout();
+    writeln!(out, "P3");
+    writeln!(out, "{} {}", image_width, image_height);
+    writeln!(out, "255");
+
+    for j in 0..image_height {
+        eprint!("\rScanlines remaining: {}", image_height - j);
+
+        for i in 0..image_width {
+            // 假设 pixel_center、ray_direction、camera_center、pixel_delta_u、pixel_delta_v 是已定义的
+            let pixel_center =
+                pixel00_loc + pixel_delta_u * (i as f64) + pixel_delta_v * (j as f64);
+            let ray_direction = pixel_center - camera_center;
+            let ray = Ray::new(camera_center.clone(), ray_direction);
+
+            let pixel_color = ray_color(&ray);
+            write_color(&mut out, &pixel_color);
         }
-        progress.inc(1);
     }
-    progress.finish();
-
-    println!(
-        "Output image as \"{}\"",
-        style(path.to_str().unwrap()).yellow()
-    );
-    img.save(path).expect("Cannot save the image to the file");
 }
