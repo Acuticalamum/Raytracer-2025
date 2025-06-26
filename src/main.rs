@@ -14,7 +14,8 @@ use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use ray::Ray;
-use std::io::{self, Write};
+use std::fs::File;
+use std::io::{self, Write, BufWriter};
 use vec3::{Point3, Vec3};
 
 pub fn ray_color(r: &Ray) -> Color {
@@ -23,7 +24,7 @@ pub fn ray_color(r: &Ray) -> Color {
     Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
 }
 
-fn main() {
+fn main() -> io::Result<()> {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let mut image_height = (image_width as f64 / aspect_ratio) as i32;
@@ -43,10 +44,13 @@ fn main() {
         camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
-    let mut out = io::stdout();
-    writeln!(out, "P3");
-    writeln!(out, "{} {}", image_width, image_height);
-    writeln!(out, "255");
+    let file = File::create("output/book1/image2.ppm").expect("Failed to create file");
+    let mut out = BufWriter::new(file);
+
+
+    writeln!(out, "P3")?;
+    writeln!(out, "{} {}", image_width, image_height)?;
+    writeln!(out, "255")?;
 
     for j in 0..image_height {
         eprint!("\rScanlines remaining: {}", image_height - j);
@@ -59,7 +63,8 @@ fn main() {
             let ray = Ray::new(camera_center.clone(), ray_direction);
 
             let pixel_color = ray_color(&ray);
-            write_color(&mut out, &pixel_color);
+            write_color(&mut out, &pixel_color)?;
         }
     }
+    Ok(())
 }
