@@ -15,7 +15,7 @@ use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use ray::Ray;
 use std::fs::File;
-use std::io::{self, Write, BufWriter};
+use std::io::{self, BufWriter, Write};
 use vec3::{Point3, Vec3};
 
 pub fn ray_color(r: &Ray) -> Color {
@@ -46,7 +46,6 @@ fn main() -> io::Result<()> {
 
     let file = File::create("output/book1/image2.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
-
 
     writeln!(out, "P3")?;
     writeln!(out, "{} {}", image_width, image_height)?;
