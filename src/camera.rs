@@ -22,7 +22,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn ray_color(&self, r: &Ray, depth: usize, world: &dyn Hittable) -> Color {
-        if depth <= 0 {
+        if depth == 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
         let mut rec = HitRecord::default();
