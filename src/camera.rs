@@ -1,9 +1,11 @@
-use crate::color::Color;
+use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
-use crate::rtweekend;
+use crate::{color, rtweekend};
 use crate::vec3::{Point3, Vec3};
 use std::io::{self, Write};
+use crate::interval::Interval;
+use crate::rtweekend::INFINITY;
 
 pub struct Camera {
     pub aspect_ratio: f64,
@@ -15,6 +17,18 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     samples_per_pixel: u32,
     pixel_samples_scale: f64,
+}
+
+impl Camera {
+    pub fn ray_color(&self, r: &Ray, world: &dyn Hittable) -> Color {
+        let mut rec = HitRecord::default();
+        if world.hit(r, Interval::new(0.0, INFINITY), &mut rec) {
+            return (Color::new(1.0, 1.0, 1.0) + rec.normal) * 0.5;
+        }
+        let unit_direction = Vec3::unit_vector(r.direction());
+        let a = 0.5 * (unit_direction.y() + 1.0);
+        Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
+    }
 }
 
 impl Camera {
@@ -79,10 +93,10 @@ impl Camera {
         Ray::new(ray_origin, ray_direction)
     }
 
-    /*pub fn render<W: Write>(&self, world: &dyn Hittable, writer: &mut W) {
-        writeln!(writer, "P3\n{} {}\n255", self.image_width, self.image_height).unwrap();
+    pub fn render<W: Write>(&self, world: &dyn Hittable, writer: &mut W) -> io::Result<()> {
+        writeln!(writer, "P3\n{} {}\n255", self.image_width, self.image_height)?;
 
-        for j in (0..self.image_height).rev() {
+        for j in (0..self.image_height) {
             eprint!("\rScanlines remaining: {} ", j);
             io::stderr().flush().unwrap();
 
@@ -95,10 +109,11 @@ impl Camera {
                 }
 
                 pixel_color *= self.pixel_samples_scale;
-                Camera::write_color(writer, &pixel_color);
+                color::write_color(writer, &pixel_color)?;
             }
         }
 
         eprintln!("\rDone.");
-    }*/
+        Ok(())
+    }
 }
