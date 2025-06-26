@@ -16,11 +16,11 @@ use ray::Ray;
 use color::Color;
 use vec3::Vec3;
 
-pub fn ray_color(r: &Ray) -> Color {
+/*pub fn ray_color(r: &Ray) -> Color {
     let unit_direction = Vec3::unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
     Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
-}
+}*/
 
 fn main() {
     let path = std::path::Path::new("output/book1/image1.png");
