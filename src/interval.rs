@@ -44,10 +44,10 @@ impl Interval {
         Self { min, max }
     }
     pub fn clamp(&self, x: f64) -> f64 {
-        if x < self.min{
+        if x < self.min {
             return self.min;
         }
-        if x > self.max{
+        if x > self.max {
             return self.max;
         }
         x

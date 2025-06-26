@@ -1,4 +1,4 @@
-use crate::{ray::Ray, color::Color, hittable::HitRecord};
+use crate::{color::Color, hittable::HitRecord, ray::Ray};
 
 pub trait Material {
     fn scatter(

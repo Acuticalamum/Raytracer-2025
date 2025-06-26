@@ -1,9 +1,9 @@
-use crate::vec3::{Vec3, Point3};
+use crate::color::Color;
+use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
-use crate::hittable::{Hittable, HitRecord};
-use crate::color::{Color};
-use std::io::{self, Write};
 use crate::rtweekend;
+use crate::vec3::{Point3, Vec3};
+use std::io::{self, Write};
 
 pub struct Camera {
     pub aspect_ratio: f64,
@@ -42,28 +42,30 @@ impl Camera {
         self.samples_per_pixel = 10;
         self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
         self.center = Point3::new(0.0, 0.0, 0.0);
-        
+
         let focal_length = 1.0;
         let viewport_height = 2.0;
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
-        
+
         let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
         let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
-        
+
         self.pixel_delta_u = viewport_u / self.image_width as f64;
         self.pixel_delta_v = viewport_v / self.image_height as f64;
-        
-        let viewport_upper_left = self.center
-            - Vec3::new(0.0, 0.0, focal_length)
-            - viewport_u / 2.0
-            - viewport_v / 2.0;
+
+        let viewport_upper_left =
+            self.center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
 
         self.pixel00_loc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
     }
-    
+
     pub fn sample_square(&self) -> Vec3 {
-            Vec3::new(rtweekend::random_double() - 0.5, rtweekend::random_double() - 0.5, 0.0)
-        }
+        Vec3::new(
+            rtweekend::random_double() - 0.5,
+            rtweekend::random_double() - 0.5,
+            0.0,
+        )
+    }
 
     pub fn get_ray(&self, i: usize, j: usize) -> Ray {
         let offset = self.sample_square();
@@ -76,8 +78,7 @@ impl Camera {
 
         Ray::new(ray_origin, ray_direction)
     }
-    
-    
+
     /*pub fn render<W: Write>(&self, world: &dyn Hittable, writer: &mut W) {
         writeln!(writer, "P3\n{} {}\n255", self.image_width, self.image_height).unwrap();
 

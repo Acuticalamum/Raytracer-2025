@@ -11,7 +11,10 @@ pub struct Ray {
 
 impl Ray {
     pub fn new(origin: Point3, direction: Vec3) -> Self {
-        Ray { orig: origin, dir: direction }
+        Ray {
+            orig: origin,
+            dir: direction,
+        }
     }
     pub fn origin(&self) -> Point3 {
         self.orig

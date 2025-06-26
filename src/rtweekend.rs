@@ -1,6 +1,6 @@
+use rand::Rng;
 use std::f64::consts::PI;
 use std::sync::Arc;
-use rand::Rng;
 
 pub const INFINITY: f64 = f64::INFINITY;
 
@@ -17,4 +17,3 @@ pub fn random_double_range(min: f64, max: f64) -> f64 {
     let mut rng = rand::rng();
     rng.random_range(min..max) // [min, max)
 }
-

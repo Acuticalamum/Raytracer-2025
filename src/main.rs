@@ -1,19 +1,19 @@
-mod vec3;
-mod ray;
+mod camera;
 mod color;
-mod interval;
 mod hittable;
 mod hittable_list;
-mod sphere;
-mod rtweekend;
-mod camera;
+mod interval;
 mod material;
+mod ray;
+mod rtweekend;
+mod sphere;
+mod vec3;
 
+use color::Color;
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use ray::Ray;
-use color::Color;
 use vec3::Vec3;
 
 pub fn ray_color(r: &Ray) -> Color {
@@ -21,8 +21,6 @@ pub fn ray_color(r: &Ray) -> Color {
     let a = 0.5 * (unit_direction.y() + 1.0);
     Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
 }
-
-
 
 fn main() {
     let path = std::path::Path::new("output/book1/image1.png");

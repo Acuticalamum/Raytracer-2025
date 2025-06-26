@@ -1,8 +1,8 @@
-use std::fmt;
-use std::f64;
-use std::ops::{Add, Sub, Mul, Div, Neg, SubAssign, MulAssign, DivAssign, AddAssign};
-use rand::Rng;
 use crate::rtweekend;
+use rand::Rng;
+use std::f64;
+use std::fmt;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
     pub(crate) x: f64,
@@ -14,10 +14,14 @@ pub type Point3 = Vec3;
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Self {x, y, z}
+        Self { x, y, z }
     }
     pub fn zero() -> Self {
-        Self {x: 0.0, y: 0.0, z: 0.0}
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
     pub fn x(&self) -> f64 {
         self.x
@@ -35,9 +39,11 @@ impl Vec3 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
     pub fn random() -> Self {
-        Vec3::new(rtweekend::random_double(), 
-                  rtweekend::random_double(), 
-                  rtweekend::random_double())
+        Vec3::new(
+            rtweekend::random_double(),
+            rtweekend::random_double(),
+            rtweekend::random_double(),
+        )
     }
     pub fn random_range(min: f64, max: f64) -> Self {
         Vec3::new(
@@ -74,7 +80,7 @@ impl Add for Vec3 {
         Self {
             x: self.x + other.x,
             y: self.y + other.y,
-            z: self.z + other.z
+            z: self.z + other.z,
         }
     }
 }
@@ -93,7 +99,7 @@ impl Sub for Vec3 {
         Self {
             x: self.x - other.x,
             y: self.y - other.y,
-            z: self.z - other.z
+            z: self.z - other.z,
         }
     }
 }
@@ -110,7 +116,9 @@ impl Mul<f64> for Vec3 {
     type Output = Self;
     fn mul(self, t: f64) -> Self {
         Self {
-            x: self.x * t, y: self.y * t, z: self.z * t,
+            x: self.x * t,
+            y: self.y * t,
+            z: self.z * t,
         }
     }
 }
@@ -152,7 +160,9 @@ impl Neg for Vec3 {
     type Output = Self;
     fn neg(self) -> Self {
         Self {
-            x: -self.x, y: -self.y, z: -self.z,
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
         }
     }
 }
@@ -168,7 +178,6 @@ impl Vec3 {
             z: u.x * v.y - u.y * v.x,
         }
     }
-    
 }
 
 impl fmt::Display for Vec3 {
