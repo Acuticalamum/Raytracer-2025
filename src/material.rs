@@ -1,5 +1,6 @@
 use crate::vec3::Vec3;
-use crate::{color::Color, hittable::HitRecord, ray::Ray};
+use crate::{color::Color, hittable::HitRecord, ray::Ray, rtweekend};
+use rand::random;
 use std::cmp::min;
 use std::f64;
 
@@ -83,6 +84,14 @@ impl Dielectric {
     }
 }
 
+impl Dielectric {
+    fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
+        let mut r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
+        r0 = r0 * r0;
+        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
+}
+
 impl Material for Dielectric {
     fn scatter(
         &self,
@@ -104,11 +113,12 @@ impl Material for Dielectric {
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract = ri * sin_theta > 1.0;
 
-        let direction = if cannot_refract {
-            Vec3::reflect(unit_direction, rec.normal)
-        } else {
-            Vec3::refract(unit_direction, rec.normal, ri)
-        };
+        let direction =
+            if cannot_refract || Self::reflectance(cos_theta, ri) > rtweekend::random_double() {
+                Vec3::reflect(unit_direction, rec.normal)
+            } else {
+                Vec3::refract(unit_direction, rec.normal, ri)
+            };
 
         *scattered = Ray::new(rec.p, direction);
         true

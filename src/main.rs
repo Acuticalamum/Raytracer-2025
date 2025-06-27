@@ -29,18 +29,19 @@ use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 fn main() -> io::Result<()> {
-    let path = std::path::Path::new("output/book1/image17.ppm");
+    let path = std::path::Path::new("output/book1/image18.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book1/image17.ppm").expect("Failed to create file");
+    let file = File::create("output/book1/image18.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let material_ground: Option<Arc<dyn Material>> =
         Some(Arc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))));
     let material_center: Option<Arc<dyn Material>> =
         Some(Arc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))));
-    let material_left: Option<Arc<dyn Material>> = Some(Arc::new(Dielectric::new(1.00 / 1.33)));
+    let material_left: Option<Arc<dyn Material>> = Some(Arc::new(Dielectric::new(1.50)));
+    let material_bubble: Option<Arc<dyn Material>> = Some(Arc::new(Dielectric::new(1.00 / 1.50)));
     let material_right: Option<Arc<dyn Material>> =
         Some(Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0)));
 
@@ -60,6 +61,11 @@ fn main() -> io::Result<()> {
         Point3::new(-1.0, 0.0, -1.0),
         0.5,
         material_left,
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(-1.0, 0.0, -1.0),
+        0.4,
+        material_bubble,
     )));
     world.add(Arc::new(Sphere::new(
         Point3::new(1.0, 0.0, -1.0),
