@@ -89,7 +89,6 @@ impl Camera {
         self.center = self.lookfrom;
 
         let focal_length = (self.lookfrom - self.lookat).length();
-        self.vfov = 90.0;
         let theta = degrees_to_radians(self.vfov);
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * focal_length;
