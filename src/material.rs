@@ -1,5 +1,7 @@
 use crate::vec3::Vec3;
 use crate::{color::Color, hittable::HitRecord, ray::Ray};
+use std::cmp::min;
+use std::f64;
 
 pub trait Material: Send + Sync {
     fn scatter(
@@ -91,16 +93,24 @@ impl Material for Dielectric {
     ) -> bool {
         *attenuation = Color::new(1.0, 1.0, 1.0);
 
-        let refraction_ratio = if rec.front_face {
+        let ri = if rec.front_face {
             1.0 / self.refraction_index
         } else {
             self.refraction_index
         };
 
         let unit_direction = Vec3::unit_vector(r_in.direction());
-        let refracted = Vec3::refract(unit_direction, rec.normal, refraction_ratio);
+        let cos_theta = Vec3::dot(-unit_direction, rec.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract = ri * sin_theta > 1.0;
 
-        *scattered = Ray::new(rec.p, refracted);
+        let direction = if cannot_refract {
+            Vec3::reflect(unit_direction, rec.normal)
+        } else {
+            Vec3::refract(unit_direction, rec.normal, ri)
+        };
+
+        *scattered = Ray::new(rec.p, direction);
         true
     }
 }
