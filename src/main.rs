@@ -11,6 +11,7 @@ mod vec3;
 
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
+use crate::material::Dielectric;
 use crate::rtweekend::INFINITY;
 use color::{Color, write_color};
 use console::style;
@@ -28,19 +29,18 @@ use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 fn main() -> io::Result<()> {
-    let path = std::path::Path::new("output/book1/image14.ppm");
+    let path = std::path::Path::new("output/book1/image15.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book1/image14.ppm").expect("Failed to create file");
+    let file = File::create("output/book1/image15.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let material_ground: Option<Arc<dyn Material>> =
         Some(Arc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))));
     let material_center: Option<Arc<dyn Material>> =
         Some(Arc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))));
-    let material_left: Option<Arc<dyn Material>> =
-        Some(Arc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3)));
+    let material_left: Option<Arc<dyn Material>> = Some(Arc::new(Dielectric::new(1.50)));
     let material_right: Option<Arc<dyn Material>> =
         Some(Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0)));
 
