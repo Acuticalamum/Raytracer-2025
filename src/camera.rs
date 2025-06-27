@@ -2,7 +2,7 @@ use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::rtweekend::INFINITY;
+use crate::rtweekend::{INFINITY, degrees_to_radians};
 use crate::vec3::{Point3, Vec3};
 use crate::{color, rtweekend};
 use std::io::{self, Write};
@@ -18,6 +18,7 @@ pub struct Camera {
     pub samples_per_pixel: u32,
     pixel_samples_scale: f64,
     pub max_depth: usize,
+    pub vfov: f64,
 }
 
 impl Camera {
@@ -60,6 +61,7 @@ impl Camera {
             samples_per_pixel: 0,
             pixel_samples_scale: 0.0,
             max_depth: 0,
+            vfov: 90.0,
         };
         cam.initialize();
         cam
@@ -75,7 +77,10 @@ impl Camera {
         self.center = Point3::new(0.0, 0.0, 0.0);
 
         let focal_length = 1.0;
-        let viewport_height = 2.0;
+        self.vfov = 90.0;
+        let theta = degrees_to_radians(self.vfov);
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
         let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
