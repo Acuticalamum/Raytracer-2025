@@ -15,9 +15,9 @@ pub struct Camera {
     pixel00_loc: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
-    samples_per_pixel: u32,
+    pub samples_per_pixel: u32,
     pixel_samples_scale: f64,
-    max_depth: usize,
+    pub max_depth: usize,
 }
 
 impl Camera {
@@ -27,8 +27,19 @@ impl Camera {
         }
         let mut rec = HitRecord::default();
         if world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
-            let direction = Vec3::random_unit_vector() + rec.normal;
-            return self.ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.3;
+            let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+            let mut attenuation = Color::new(0.0, 0.0, 0.0);
+            if rec.mat.is_some() {
+                let rec_ = rec.clone();
+                if rec
+                    .mat
+                    .unwrap()
+                    .scatter(r, &rec_, &mut attenuation, &mut scattered)
+                {
+                    return attenuation * self.ray_color(&scattered, depth - 1, world);
+                }
+            }
+            return Color::new(0.0, 0.0, 0.0);
         }
         let unit_direction = Vec3::unit_vector(r.direction());
         let a = 0.5 * (unit_direction.y() + 1.0);

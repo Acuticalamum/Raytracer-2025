@@ -38,6 +38,10 @@ impl Vec3 {
     pub fn length_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
+    pub fn near_zero(&self) -> bool {
+        const EPS: f64 = 1e-8;
+        self.x < EPS && self.y < EPS && self.z < EPS
+    }
     pub fn random() -> Self {
         Vec3::new(
             rtweekend::random_double(),
@@ -177,6 +181,9 @@ impl Vec3 {
             y: u.z * v.x - u.x * v.z,
             z: u.x * v.y - u.y * v.x,
         }
+    }
+    pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+        v - n * (Vec3::dot(v, n) * 2.0)
     }
 }
 

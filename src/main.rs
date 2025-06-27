@@ -18,27 +18,60 @@ use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use interval::Interval;
+use material::{Lambertian, Material, Metal};
 use ray::Ray;
 use sphere::Sphere;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
+use std::option::Option;
 use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 fn main() -> io::Result<()> {
-    let path = std::path::Path::new("output/book1/image12.ppm");
+    let path = std::path::Path::new("output/book1/image13.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book1/image12.ppm").expect("Failed to create file");
+    let file = File::create("output/book1/image13.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
+    let material_ground: Option<Arc<dyn Material>> =
+        Some(Arc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))));
+    let material_center: Option<Arc<dyn Material>> =
+        Some(Arc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))));
+    let material_left: Option<Arc<dyn Material>> =
+        Some(Arc::new(Metal::new(Color::new(0.8, 0.8, 0.8))));
+    let material_right: Option<Arc<dyn Material>> =
+        Some(Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2))));
+
     let mut world = HittableList::new();
-    world.add(Arc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Arc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
-    let cam = Camera::new(16.0 / 9.0, 400);
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 0.0, -1.2),
+        0.5,
+        material_center,
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left,
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right,
+    )));
+
+    let mut cam = Camera::new(16.0 / 9.0, 400);
     cam.render(&world, &mut out)?;
-
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
     Ok(())
 }
