@@ -95,7 +95,7 @@ impl Camera {
         self.samples_per_pixel = 100;
         self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
         self.center = self.lookfrom;
-        
+
         let theta = degrees_to_radians(self.vfov);
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * self.focus_dist;
@@ -116,7 +116,7 @@ impl Camera {
 
         self.pixel00_loc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
         self.max_depth = 10;
-        
+
         let defocus_radius = self.focus_dist * degrees_to_radians(self.defocus_angle / 2.0).tan();
         self.defocus_disk_u = self.u * defocus_radius;
         self.defocus_disk_v = self.v * defocus_radius;
@@ -129,8 +129,8 @@ impl Camera {
             0.0,
         )
     }
-    
-    pub fn defocus_sample(&self) -> Point3{
+
+    pub fn defocus_sample(&self) -> Point3 {
         let p = Vec3::random_in_unit_disk();
         self.center + self.defocus_disk_u * p.x() + self.defocus_disk_v * p.y()
     }
@@ -141,7 +141,7 @@ impl Camera {
             + self.pixel_delta_u * (i as f64 + offset.x())
             + self.pixel_delta_v * (j as f64 + offset.y());
 
-        let ray_origin = if(self.defocus_angle <= 0.0) {
+        let ray_origin = if (self.defocus_angle <= 0.0) {
             self.center
         } else {
             self.defocus_sample()

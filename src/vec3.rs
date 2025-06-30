@@ -1,9 +1,9 @@
 use crate::rtweekend;
+use crate::rtweekend::random_double;
 use rand::Rng;
 use std::f64;
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use crate::rtweekend::random_double;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
@@ -80,9 +80,12 @@ impl Vec3 {
     }
     pub fn random_in_unit_disk() -> Self {
         loop {
-            let p = Vec3::new(rtweekend::random_double_range(-1.0, 1.0), 
-                              rtweekend::random_double_range(-1.0, 1.0), 0.0);
-            if(p.length_squared() < 1.0) {
+            let p = Vec3::new(
+                rtweekend::random_double_range(-1.0, 1.0),
+                rtweekend::random_double_range(-1.0, 1.0),
+                0.0,
+            );
+            if (p.length_squared() < 1.0) {
                 return p;
             }
         }
