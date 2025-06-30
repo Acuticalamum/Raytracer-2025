@@ -30,11 +30,11 @@ use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 fn main() -> io::Result<()> {
-    let path = std::path::Path::new("output/book1/image21.ppm");
+    let path = std::path::Path::new("output/book1/image22.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book1/image21.ppm").expect("Failed to create file");
+    let file = File::create("output/book1/image22.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let material_ground: Option<Arc<dyn Material>> =
@@ -85,6 +85,9 @@ fn main() -> io::Result<()> {
     cam.lookfrom = Point3::new(-2.0, 2.0, 1.0);
     cam.lookat = Point3::new(0.0, 0.0, -1.0);
     cam.vup = Vec3::new(0.0, 1.0, 0.0);
+    
+    cam.defocus_angle = 10.0;
+    cam.focus_dist = 3.4;
 
     cam.initialize();
     cam.render(&world, &mut out)?;
