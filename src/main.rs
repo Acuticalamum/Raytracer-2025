@@ -1,3 +1,4 @@
+mod aabb;
 mod camera;
 mod color;
 mod hittable;
@@ -8,12 +9,11 @@ mod ray;
 mod rtweekend;
 mod sphere;
 mod vec3;
-mod aabb;
 
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Dielectric;
-use crate::rtweekend::{random_double, INFINITY};
+use crate::rtweekend::{INFINITY, random_double};
 use color::{Color, write_color};
 use console::style;
 use hittable_list::HittableList;

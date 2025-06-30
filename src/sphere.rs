@@ -18,7 +18,12 @@ impl Sphere {
             mat,
         }
     }
-    pub fn new(center1: Point3, center2: Point3, radius: f64, mat: Option<Arc<dyn Material>>) -> Self {
+    pub fn new(
+        center1: Point3,
+        center2: Point3,
+        radius: f64,
+        mat: Option<Arc<dyn Material>>,
+    ) -> Self {
         Self {
             center: Ray::new(center1, center2 - center1),
             radius: f64::max(0.0, radius),

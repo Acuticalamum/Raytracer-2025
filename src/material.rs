@@ -1,9 +1,9 @@
+use crate::rtweekend::random_double;
 use crate::vec3::Vec3;
 use crate::{color::Color, hittable::HitRecord, ray::Ray, rtweekend};
 use rand::random;
 use std::cmp::min;
 use std::f64;
-use crate::rtweekend::random_double;
 
 pub trait Material: Send + Sync {
     fn scatter(

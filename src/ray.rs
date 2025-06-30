@@ -29,7 +29,9 @@ impl Ray {
     pub fn direction(&self) -> Vec3 {
         self.dir
     }
-    pub fn time(&self) -> f64 { self.tm }
+    pub fn time(&self) -> f64 {
+        self.tm
+    }
     pub fn at(&self, t: f64) -> Point3 {
         self.orig + self.dir * t
     }
