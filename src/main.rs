@@ -1,4 +1,5 @@
 mod aabb;
+mod bvh;
 mod camera;
 mod color;
 mod hittable;
@@ -9,7 +10,6 @@ mod ray;
 mod rtweekend;
 mod sphere;
 mod vec3;
-mod bvh;
 
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};

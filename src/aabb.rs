@@ -36,7 +36,7 @@ impl AABB {
 
         AABB { x, y, z }
     }
-    
+
     pub fn from_boxes(box0: AABB, box1: AABB) -> Self {
         Self {
             x: box0.x.union(&box1.x),

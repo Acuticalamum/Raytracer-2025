@@ -1,9 +1,9 @@
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
-use std::sync::Arc;
-use crate::aabb::AABB;
 use crate::vec3::Vec3;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct HittableList {

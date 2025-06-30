@@ -1,9 +1,9 @@
+use crate::aabb::AABB;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
 use std::sync::Arc;
-use crate::aabb::AABB;
 
 #[derive(Clone)]
 pub struct HitRecord {

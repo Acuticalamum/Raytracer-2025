@@ -1,9 +1,9 @@
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
-use crate::aabb::AABB;
 use std::sync::Arc;
 
 pub struct Sphere {
@@ -35,7 +35,7 @@ impl Sphere {
             center: Ray::new(center1, center2 - center1),
             radius: f64::max(0.0, radius),
             mat,
-            bbox: AABB::from_boxes(bbox1, bbox2)
+            bbox: AABB::from_boxes(bbox1, bbox2),
         }
     }
 }
