@@ -2,15 +2,20 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use std::sync::Arc;
+use crate::aabb::AABB;
+use crate::vec3::Vec3;
 
+#[derive(Clone)]
 pub struct HittableList {
-    objects: Vec<Arc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable>>,
+    bbox: AABB,
 }
 
 impl HittableList {
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),
+            bbox: AABB::new(Interval::empty(), Interval::empty(), Interval::empty()),
         }
     }
 
@@ -25,6 +30,7 @@ impl HittableList {
     }
 
     pub fn add(&mut self, object: Arc<dyn Hittable>) {
+        self.bbox = AABB::from_boxes(self.bbox, object.bounding_box());
         self.objects.push(object);
     }
 }
@@ -44,5 +50,8 @@ impl Hittable for HittableList {
         }
 
         hit_anything
+    }
+    fn bounding_box(&self) -> AABB {
+        self.bbox
     }
 }

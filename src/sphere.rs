@@ -3,19 +3,23 @@ use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
+use crate::aabb::AABB;
 use std::sync::Arc;
 
 pub struct Sphere {
     center: Ray,
     radius: f64,
     mat: Option<Arc<dyn Material>>,
+    bbox: AABB,
 }
 impl Sphere {
     pub fn static_new(static_center: Point3, radius: f64, mat: Option<Arc<dyn Material>>) -> Self {
+        let rvec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
             radius: f64::max(0.0, radius),
             mat,
+            bbox: AABB::from_points(static_center - rvec, static_center + rvec),
         }
     }
     pub fn new(
@@ -24,10 +28,14 @@ impl Sphere {
         radius: f64,
         mat: Option<Arc<dyn Material>>,
     ) -> Self {
+        let rvec = Vec3::new(radius, radius, radius);
+        let bbox1 = AABB::from_points(center1 - rvec, center1 + rvec);
+        let bbox2 = AABB::from_points(center2 - rvec, center2 + rvec);
         Self {
             center: Ray::new(center1, center2 - center1),
             radius: f64::max(0.0, radius),
             mat,
+            bbox: AABB::from_boxes(bbox1, bbox2)
         }
     }
 }
@@ -61,5 +69,8 @@ impl Hittable for Sphere {
         rec.mat = self.mat.clone();
 
         true
+    }
+    fn bounding_box(&self) -> AABB {
+        self.bbox
     }
 }

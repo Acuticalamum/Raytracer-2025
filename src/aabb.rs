@@ -1,0 +1,91 @@
+use crate::interval::Interval;
+use crate::ray::Ray;
+use crate::vec3::{Point3, Vec3};
+use std::cmp::{max, min};
+
+#[derive(Clone, Copy)]
+pub struct AABB {
+    pub x: Interval,
+    pub y: Interval,
+    pub z: Interval,
+}
+
+impl AABB {
+    pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
+        AABB { x, y, z }
+    }
+
+    pub fn from_points(a: Point3, b: Point3) -> Self {
+        let x = if a.x <= b.x {
+            Interval::new(a.x, b.x)
+        } else {
+            Interval::new(b.x, a.x)
+        };
+
+        let y = if a.y <= b.y {
+            Interval::new(a.y, b.y)
+        } else {
+            Interval::new(b.y, a.y)
+        };
+
+        let z = if a.z <= b.z {
+            Interval::new(a.z, b.z)
+        } else {
+            Interval::new(b.z, a.z)
+        };
+
+        AABB { x, y, z }
+    }
+    
+    pub fn from_boxes(box0: AABB, box1: AABB) -> Self {
+        Self {
+            x: box0.x.union(&box1.x),
+            y: box0.y.union(&box1.y),
+            z: box0.z.union(&box1.z),
+        }
+    }
+
+    pub fn axis_interval(&self, n: usize) -> &Interval {
+        match n {
+            0 => &self.x,
+            1 => &self.y,
+            _ => &self.z,
+        }
+    }
+
+    pub fn hit(&self, r: &Ray, ray_t: &mut Interval) -> bool {
+        let ray_orig = r.origin();
+        let ray_dir = r.direction();
+
+        for axis in 0..3 {
+            let ax = self.axis_interval(axis);
+            let x_y_z_dir = match axis {
+                0 => ray_dir.x(),
+                1 => ray_dir.y(),
+                _ => ray_dir.z(),
+            };
+            let x_y_z_ori = match axis {
+                0 => ray_orig.x(),
+                1 => ray_orig.y(),
+                _ => ray_orig.z(),
+            };
+            let adinv = 1.0 / x_y_z_dir;
+
+            let t0 = (ax.min - x_y_z_ori) * adinv;
+            let t1 = (ax.max - x_y_z_ori) * adinv;
+
+            if t0 < t1 {
+                ray_t.min = ray_t.min.max(t0);
+                ray_t.max = ray_t.max.min(t1);
+            } else {
+                ray_t.min = ray_t.min.max(t1);
+                ray_t.max = ray_t.max.min(t0);
+            }
+
+            if ray_t.max <= ray_t.min {
+                return false;
+            }
+        }
+        true
+    }
+}

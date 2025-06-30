@@ -14,6 +14,11 @@ impl Interval {
     pub fn new(min: f64, max: f64) -> Self {
         Self { min, max }
     }
+    pub fn new_ab(a: f64, b: f64) -> Self {
+        let min = if a < b { a } else { b };
+        let max = if a > b { a } else { b };
+        Self::new(min, max)
+    }
     pub fn size(&self) -> f64 {
         self.max - self.min
     }
@@ -51,5 +56,9 @@ impl Interval {
             return self.max;
         }
         x
+    }
+    pub fn expand(&self, delta: f64) -> Self {
+        let padding = delta / 2.0;
+        Interval::new(self.min - padding, self.max + padding)
     }
 }
