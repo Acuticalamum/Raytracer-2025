@@ -136,7 +136,6 @@ fn checkered_spheres() -> io::Result<()> {
     let file = File::create("output/book2/image3.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
     let mut world = HittableList::new();
-    
 
     let checker: Arc<dyn Texture> = Arc::new(CheckerTexture::from_colors(
         0.32,
@@ -169,7 +168,7 @@ fn checkered_spheres() -> io::Result<()> {
 
     cam.defocus_angle = 0.0;
     cam.focus_dist = 10.0;
-    
+
     cam.initialize();
     cam.render(&world, &mut out)?;
     Ok(())
