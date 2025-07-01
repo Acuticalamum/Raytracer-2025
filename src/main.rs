@@ -9,12 +9,15 @@ mod material;
 mod ray;
 mod rtweekend;
 mod sphere;
+mod texture;
 mod vec3;
 
+use crate::bvh::BVHNode;
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Dielectric;
 use crate::rtweekend::{INFINITY, random_double};
+use crate::texture::{CheckerTexture, SolidColor, Texture};
 use color::{Color, write_color};
 use console::style;
 use hittable_list::HittableList;
@@ -31,18 +34,18 @@ use std::option::Option;
 use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
-fn main() -> io::Result<()> {
-    let path = std::path::Path::new("output/book2/image1.ppm");
+fn bouncing_spheres() -> io::Result<()> {
+    let path = std::path::Path::new("output/book2/image2.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book2/image1.ppm").expect("Failed to create file");
+    let file = File::create("output/book2/image2.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
-
     let mut world = HittableList::new();
 
-    let ground_material: Option<Arc<dyn Material>> =
-        Some(Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))));
+    let ground_material: Option<Arc<dyn Material>> = Some(Arc::new(Lambertian::new(Arc::new(
+        CheckerTexture::from_colors(0.32, Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9)),
+    ))));
     world.add(Arc::new(Sphere::static_new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -62,8 +65,9 @@ fn main() -> io::Result<()> {
                 let sphere_material: Option<Arc<dyn Material>>;
 
                 if choose_mat < 0.8 {
-                    let albedo = Color::random() * Color::random();
-                    sphere_material = Some(Arc::new(Lambertian::new(albedo)));
+                    let albedo: Color = Color::random() * Color::random();
+                    sphere_material =
+                        Some(Arc::new(Lambertian::new(Arc::new(SolidColor::new(albedo)))));
                     let center2 = center + Vec3::new(0.0, random_double() * 0.5, 0.0);
                     world.add(Arc::new(Sphere::new(center, center2, 0.2, sphere_material)));
                 } else if choose_mat < 0.95 {
@@ -86,8 +90,9 @@ fn main() -> io::Result<()> {
         material1,
     )));
 
-    let material2: Option<Arc<dyn Material>> =
-        Some(Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1))));
+    let material2: Option<Arc<dyn Material>> = Some(Arc::new(Lambertian::new(Arc::new(
+        SolidColor::new(Color::new(0.4, 0.2, 0.1)),
+    ))));
     world.add(Arc::new(Sphere::static_new(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
@@ -102,10 +107,12 @@ fn main() -> io::Result<()> {
         material3,
     )));
 
+    let world = HittableList::from(Arc::new(BVHNode::new_from_list(&mut world)));
+
     let mut cam = Camera::new(16.0 / 9.0, 1200);
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 400;
-    cam.samples_per_pixel = 100;
+    cam.samples_per_pixel = 10;
     cam.max_depth = 50;
 
     cam.vfov = 20.0;
@@ -118,6 +125,56 @@ fn main() -> io::Result<()> {
 
     cam.initialize();
     cam.render(&world, &mut out)?;
-
     Ok(())
+}
+
+fn checkered_spheres() -> io::Result<()> {
+    let path = std::path::Path::new("output/book2/image3.ppm");
+    let prefix = path.parent().unwrap();
+    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+
+    let file = File::create("output/book2/image3.ppm").expect("Failed to create file");
+    let mut out = BufWriter::new(file);
+    let mut world = HittableList::new();
+    
+
+    let checker: Arc<dyn Texture> = Arc::new(CheckerTexture::from_colors(
+        0.32,
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Some(Arc::new(Lambertian::new(checker.clone()))),
+    )));
+
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        Some(Arc::new(Lambertian::new(checker))),
+    )));
+
+    let mut cam = Camera::new(16.0 / 9.0, 1200);
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 10;
+    cam.max_depth = 50;
+
+    cam.vfov = 20.0;
+    cam.lookfrom = Point3::new(13.0, 2.0, 3.0);
+    cam.lookat = Point3::new(0.0, 0.0, 0.0);
+    cam.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    cam.defocus_angle = 0.0;
+    cam.focus_dist = 10.0;
+    
+    cam.initialize();
+    cam.render(&world, &mut out)?;
+    Ok(())
+}
+
+fn main() -> io::Result<()> {
+    bouncing_spheres()
 }

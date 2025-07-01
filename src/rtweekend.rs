@@ -17,3 +17,7 @@ pub fn random_double_range(min: f64, max: f64) -> f64 {
     let mut rng = rand::rng();
     rng.random_range(min..max) // [min, max)
 }
+
+pub fn random_int(min: i32, max: i32) -> i32 {
+    random_double_range(min as f64, (max + 1) as f64) as i32
+}

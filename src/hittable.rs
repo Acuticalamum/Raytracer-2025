@@ -12,6 +12,8 @@ pub struct HitRecord {
     pub mat: Option<Arc<dyn Material>>,
     pub t: f64,
     pub front_face: bool,
+    pub u: f64,
+    pub v: f64,
 }
 impl HitRecord {
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
@@ -32,6 +34,8 @@ impl Default for HitRecord {
             mat: None,
             t: 0.0,
             front_face: true,
+            u: 0.0,
+            v: 0.0,
         }
     }
 }
