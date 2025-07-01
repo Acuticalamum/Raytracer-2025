@@ -175,5 +175,5 @@ fn checkered_spheres() -> io::Result<()> {
 }
 
 fn main() -> io::Result<()> {
-    bouncing_spheres()
+    checkered_spheres()
 }

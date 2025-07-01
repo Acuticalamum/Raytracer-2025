@@ -38,6 +38,12 @@ impl Sphere {
             bbox: AABB::from_boxes(bbox1, bbox2),
         }
     }
+    pub fn get_sphere_uv(p: &Point3, u: &mut f64, v: &mut f64) {
+        let theta = (-p.y).acos();
+        let phi = (-p.z).atan2(p.x) + std::f64::consts::PI;
+        *u = phi / (2.0 * std::f64::consts::PI);
+        *v = theta / std::f64::consts::PI;
+    }
 }
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
