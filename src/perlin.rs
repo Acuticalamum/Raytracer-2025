@@ -2,25 +2,25 @@ use rand::prelude::*;
 use rand::rngs::ThreadRng;
 
 use crate::rtweekend;
-use crate::vec3::Point3;
+use crate::vec3::{Point3, Vec3};
 use array_init::array_init;
 
 const POINT_COUNT: usize = 256;
 
 pub struct Perlin {
-    rand_float: [f64; POINT_COUNT],
     perm_x: [usize; POINT_COUNT],
     perm_y: [usize; POINT_COUNT],
     perm_z: [usize; POINT_COUNT],
+    rand_vec: [Vec3; POINT_COUNT],
 }
 
 impl Perlin {
     pub fn new() -> Self {
         let mut rng = rand::rng();
 
-        let mut rand_float = [0.0; POINT_COUNT];
+        let mut rand_vec = [Vec3::zero(); POINT_COUNT];
         for i in 0..POINT_COUNT {
-            rand_float[i] = rtweekend::random_double();
+            rand_vec[i] = Vec3::unit_vector(Vec3::random_range(-1.0, 1.0));
         }
 
         let perm_x = Self::generate_perm(&mut rng);
@@ -28,7 +28,7 @@ impl Perlin {
         let perm_z = Self::generate_perm(&mut rng);
 
         Self {
-            rand_float,
+            rand_vec,
             perm_x,
             perm_y,
             perm_z,
@@ -40,15 +40,11 @@ impl Perlin {
         let v = p.y() - p.y().floor();
         let w = p.z() - p.z().floor();
 
-        let u = u * u * (3.0 - 2.0 * u);
-        let v = v * v * (3.0 - 2.0 * v);
-        let w = w * w * (3.0 - 2.0 * w);
-
         let i = (p.x().floor() + 10000.0) as usize;
         let j = (p.y().floor() + 10000.0) as usize;
         let k = (p.z().floor() + 10000.0) as usize;
 
-        let mut c = [[[0.0; 2]; 2]; 2];
+        let mut c = [[[Vec3::zero(); 2]; 2]; 2];
 
         for di in 0..2 {
             for dj in 0..2 {
@@ -56,7 +52,7 @@ impl Perlin {
                     let idx = self.perm_x[(i + di) & 255]
                         ^ self.perm_y[(j + dj) & 255]
                         ^ self.perm_z[(k + dk) & 255];
-                    c[di][dj][dk] = self.rand_float[idx];
+                    c[di][dj][dk] = self.rand_vec[idx];
                 }
             }
         }
@@ -77,15 +73,20 @@ impl Perlin {
         }
     }
 
-    fn trilinear_interp(c: &[[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    fn trilinear_interp(c: &[[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+        let uu = u * u * (3.0 - 2.0 * u);
+        let vv = v * v * (3.0 - 2.0 * v);
+        let ww = w * w * (3.0 - 2.0 * w);
+
         let mut accum = 0.0;
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
-                    let weight = (i as f64 * u + (1.0 - i as f64) * (1.0 - u))
-                        * (j as f64 * v + (1.0 - j as f64) * (1.0 - v))
-                        * (k as f64 * w + (1.0 - k as f64) * (1.0 - w));
-                    accum += weight * c[i][j][k];
+                    let weight_v = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
+                    let weight = (i as f64 * uu + (1.0 - i as f64) * (1.0 - uu))
+                        * (j as f64 * vv + (1.0 - j as f64) * (1.0 - vv))
+                        * (k as f64 * ww + (1.0 - k as f64) * (1.0 - ww));
+                    accum += weight * Vec3::dot(weight_v, c[i][j][k]);
                 }
             }
         }
