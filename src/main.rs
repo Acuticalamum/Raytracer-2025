@@ -7,6 +7,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod ray;
+mod rtw_stb_image;
 mod rtweekend;
 mod sphere;
 mod texture;
@@ -17,7 +18,7 @@ use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Dielectric;
 use crate::rtweekend::{INFINITY, random_double};
-use crate::texture::{CheckerTexture, SolidColor, Texture};
+use crate::texture::{CheckerTexture, ImageTexture, SolidColor, Texture};
 use color::{Color, write_color};
 use console::style;
 use hittable_list::HittableList;
@@ -174,6 +175,45 @@ fn checkered_spheres() -> io::Result<()> {
     Ok(())
 }
 
+pub fn earth() -> io::Result<()> {
+    let path = std::path::Path::new("output/book2/image4.ppm");
+    let prefix = path.parent().unwrap();
+    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+
+    let file = File::create("output/book2/image4.ppm").expect("Failed to create file");
+    let mut out = BufWriter::new(file);
+    let mut world = HittableList::new();
+
+    let earth_texture = Arc::new(ImageTexture::new("earthmap.png"));
+    let earth_surface = Arc::new(Lambertian::new(earth_texture));
+    let globe = Arc::new(Sphere::static_new(
+        Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        Some(earth_surface),
+    ));
+
+    let mut cam = Camera::new(16.0 / 9.0, 400);
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+
+    cam.vfov = 20.0;
+    cam.lookfrom = Point3::new(0.0, 0.0, 12.0);
+    cam.lookat = Point3::new(0.0, 0.0, 0.0);
+    cam.vup = Vec3::new(0.0, 1.0, 0.0);
+    cam.defocus_angle = 0.0;
+
+    cam.initialize();
+
+    let mut world = HittableList::new();
+    world.add(globe);
+
+    cam.render(&world, &mut out)?;
+
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
-    checkered_spheres()
+    earth()
 }
