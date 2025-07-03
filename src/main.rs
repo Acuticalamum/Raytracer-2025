@@ -6,6 +6,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
+mod perlin;
 mod ray;
 mod rtw_stb_image;
 mod rtweekend;
@@ -18,7 +19,7 @@ use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Dielectric;
 use crate::rtweekend::{INFINITY, random_double};
-use crate::texture::{CheckerTexture, ImageTexture, SolidColor, Texture};
+use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor, Texture};
 use color::{Color, write_color};
 use console::style;
 use hittable_list::HittableList;
@@ -214,6 +215,48 @@ pub fn earth() -> io::Result<()> {
     Ok(())
 }
 
+pub fn perlin_spheres() -> io::Result<()> {
+    let path = std::path::Path::new("output/book2/image9.ppm");
+    let prefix = path.parent().unwrap();
+    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+
+    let file = File::create("output/book2/image9.ppm").expect("Failed to create file");
+    let mut out = BufWriter::new(file);
+    let mut world = HittableList::new();
+
+    let pertext = Arc::new(NoiseTexture::new());
+
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Some(Arc::new(Lambertian::new(pertext.clone()))),
+    )));
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Some(Arc::new(Lambertian::new(pertext.clone()))),
+    )));
+
+    let mut cam = Camera::new(16.0 / 9.0, 400);
+
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+
+    cam.vfov = 20.0;
+    cam.lookfrom = Point3::new(13.0, 2.0, 3.0);
+    cam.lookat = Point3::new(0.0, 0.0, 0.0);
+    cam.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    cam.defocus_angle = 0.0;
+
+    cam.initialize();
+
+    cam.render(&world, &mut out)?;
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
-    earth()
+    perlin_spheres()
 }
