@@ -84,7 +84,7 @@ impl ImageTexture {
 
 impl Texture for ImageTexture {
     fn value(&self, mut u: f64, mut v: f64, _p: &Point3) -> Color {
-        if self.image.height() <= 0 {
+        if self.image.height() == 0 {
             return Color::new(0.0, 1.0, 1.0);
         }
 
