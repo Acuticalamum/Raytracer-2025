@@ -216,11 +216,11 @@ pub fn earth() -> io::Result<()> {
 }
 
 pub fn perlin_spheres() -> io::Result<()> {
-    let path = std::path::Path::new("output/book2/image10.ppm");
+    let path = std::path::Path::new("output/book2/image11.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book2/image10.ppm").expect("Failed to create file");
+    let file = File::create("output/book2/image11.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
     let mut world = HittableList::new();
 

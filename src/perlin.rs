@@ -40,6 +40,10 @@ impl Perlin {
         let v = p.y() - p.y().floor();
         let w = p.z() - p.z().floor();
 
+        let u = u * u * (3.0 - 2.0 * u);
+        let v = v * v * (3.0 - 2.0 * v);
+        let w = w * w * (3.0 - 2.0 * w);
+
         let i = (p.x().floor() + 10000.0) as usize;
         let j = (p.y().floor() + 10000.0) as usize;
         let k = (p.z().floor() + 10000.0) as usize;
