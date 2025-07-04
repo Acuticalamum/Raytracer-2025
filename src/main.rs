@@ -457,11 +457,22 @@ pub fn cornell_box() -> io::Result<()> {
         white.clone(),
     )));
 
+    world.add(quad::make_box(
+        Point3::new(130.0, 0.0, 65.0),
+        Point3::new(295.0, 165.0, 230.0),
+        white.clone(),
+    ));
+    world.add(quad::make_box(
+        Point3::new(265.0, 0.0, 295.0),
+        Point3::new(430.0, 330.0, 460.0),
+        white.clone(),
+    ));
+
     let mut cam = Camera::new(1.0, 600);
 
     cam.aspect_ratio = 1.0;
     cam.image_width = 600;
-    cam.samples_per_pixel = 100;
+    cam.samples_per_pixel = 5;
     cam.max_depth = 50;
     cam.background = Color::new(0.0, 0.0, 0.0);
 
