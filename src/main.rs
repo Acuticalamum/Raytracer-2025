@@ -338,11 +338,11 @@ pub fn quads() -> io::Result<()> {
 }
 
 pub fn simple_light() -> io::Result<()> {
-    let path = std::path::Path::new("output/book2/image17ppm");
+    let path = std::path::Path::new("output/book2/image18ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book2/image17.ppm").expect("Failed to create file");
+    let file = File::create("output/book2/image18.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
     let mut world = HittableList::new();
 
@@ -366,13 +366,19 @@ pub fn simple_light() -> io::Result<()> {
         Point3::new(3.0, 1.0, -2.0),
         Vec3::new(2.0, 0.0, 0.0),
         Vec3::new(0.0, 2.0, 0.0),
-        difflight,
+        difflight.clone(),
+    )));
+
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(0.0, 7.0, 0.0),
+        2.0,
+        Some(difflight),
     )));
 
     let mut cam = Camera::new(16.0 / 9.0, 400);
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 400;
-    cam.samples_per_pixel = 100;
+    cam.samples_per_pixel = 10;
     cam.max_depth = 50;
     cam.background = Color::new(0.0, 0.0, 0.0);
 
