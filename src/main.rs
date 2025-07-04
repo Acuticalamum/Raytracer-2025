@@ -394,6 +394,87 @@ pub fn simple_light() -> io::Result<()> {
     Ok(())
 }
 
+pub fn cornell_box() -> io::Result<()> {
+    let path = std::path::Path::new("output/book2/image19.ppm");
+    let prefix = path.parent().unwrap();
+    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+
+    let file = File::create("output/book2/image19.ppm").expect("Failed to create file");
+    let mut out = BufWriter::new(file);
+
+    let mut world = HittableList::new();
+
+    let red = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.65, 0.05, 0.05,
+    )))));
+    let white = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.73, 0.73, 0.73,
+    )))));
+    let green = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.12, 0.45, 0.15,
+    )))));
+    let light = Arc::new(DiffuseLight::new_from_color(Color::new(15.0, 15.0, 15.0)));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        green.clone(),
+    )));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        red.clone(),
+    )));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(343.0, 554.0, 332.0),
+        Vec3::new(-130.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -105.0),
+        light.clone(),
+    )));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        white.clone(),
+    )));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(555.0, 555.0, 555.0),
+        Vec3::new(-555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -555.0),
+        white.clone(),
+    )));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(0.0, 0.0, 555.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        white.clone(),
+    )));
+
+    let mut cam = Camera::new(1.0, 600);
+
+    cam.aspect_ratio = 1.0;
+    cam.image_width = 600;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+    cam.background = Color::new(0.0, 0.0, 0.0);
+
+    cam.vfov = 40.0;
+    cam.lookfrom = Point3::new(278.0, 278.0, -800.0);
+    cam.lookat = Point3::new(278.0, 278.0, 0.0);
+    cam.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    cam.defocus_angle = 0.0;
+    cam.initialize();
+    cam.render(&world, &mut out)?;
+    Ok(())
+}
 fn main() -> io::Result<()> {
-    simple_light()
+    cornell_box()
 }
