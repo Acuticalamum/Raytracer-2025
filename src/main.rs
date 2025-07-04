@@ -28,7 +28,7 @@ use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use interval::Interval;
-use material::{Lambertian, Material, Metal};
+use material::{DiffuseLight, Lambertian, Material, Metal};
 use ray::Ray;
 use sphere::Sphere;
 use std::f64::consts::PI;
@@ -328,6 +328,7 @@ pub fn quads() -> io::Result<()> {
     cam.lookat = Point3::new(0.0, 0.0, 0.0);
     cam.vup = Vec3::new(0.0, 1.0, 0.0);
 
+    cam.background = Color::new(0.7, 0.8, 1.0);
     cam.defocus_angle = 0.0;
 
     cam.initialize();
@@ -336,6 +337,57 @@ pub fn quads() -> io::Result<()> {
     Ok(())
 }
 
+pub fn simple_light() -> io::Result<()> {
+    let path = std::path::Path::new("output/book2/image17ppm");
+    let prefix = path.parent().unwrap();
+    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+
+    let file = File::create("output/book2/image17.ppm").expect("Failed to create file");
+    let mut out = BufWriter::new(file);
+    let mut world = HittableList::new();
+
+    let pertext = Arc::new(NoiseTexture::new(4.0));
+
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Some(Arc::new(Lambertian::new(pertext.clone()))),
+    )));
+
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Some(Arc::new(Lambertian::new(pertext.clone()))),
+    )));
+
+    let difflight = Arc::new(DiffuseLight::new_from_color(Color::new(4.0, 4.0, 4.0)));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(3.0, 1.0, -2.0),
+        Vec3::new(2.0, 0.0, 0.0),
+        Vec3::new(0.0, 2.0, 0.0),
+        difflight,
+    )));
+
+    let mut cam = Camera::new(16.0 / 9.0, 400);
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+    cam.background = Color::new(0.0, 0.0, 0.0);
+
+    cam.vfov = 20.0;
+    cam.lookfrom = Point3::new(26.0, 3.0, 6.0);
+    cam.lookat = Point3::new(0.0, 2.0, 0.0);
+    cam.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    cam.defocus_angle = 0.0;
+
+    cam.initialize();
+    cam.render(&world, &mut out)?;
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
-    quads()
+    simple_light()
 }

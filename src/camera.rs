@@ -18,6 +18,7 @@ pub struct Camera {
     pub samples_per_pixel: u32,
     pixel_samples_scale: f64,
     pub max_depth: usize,
+    pub background: Color,
     pub vfov: f64,
     pub lookfrom: Point3,
     pub lookat: Point3,
@@ -37,24 +38,26 @@ impl Camera {
             return Color::new(0.0, 0.0, 0.0);
         }
         let mut rec = HitRecord::default();
-        if world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
-            let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
-            let mut attenuation = Color::new(0.0, 0.0, 0.0);
-            if rec.mat.is_some() {
-                let rec_ = rec.clone();
-                if rec
-                    .mat
-                    .unwrap()
-                    .scatter(r, &rec_, &mut attenuation, &mut scattered)
-                {
-                    return attenuation * self.ray_color(&scattered, depth - 1, world);
-                }
-            }
-            return Color::new(0.0, 0.0, 0.0);
+        if !world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
+            return self.background;
         }
-        let unit_direction = Vec3::unit_vector(r.direction());
-        let a = 0.5 * (unit_direction.y() + 1.0);
-        Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
+        let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+        let mut attenuation = Color::new(0.0, 0.0, 0.0);
+        if rec.mat.is_some() {
+            let rec_ = rec.clone();
+            let color_from_emission = rec.mat.unwrap().emitted(rec.u, rec.v, &rec.p);
+            let mut color_from_scatter = Color::new(0.0, 0.0, 0.0);
+            let rec__ = rec_.clone();
+            if rec_
+                .mat
+                .unwrap()
+                .scatter(r, &rec__, &mut attenuation, &mut scattered)
+            {
+                color_from_scatter = attenuation * self.ray_color(&scattered, depth - 1, world);
+            }
+            return color_from_emission + color_from_scatter;
+        }
+        Color::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -71,6 +74,7 @@ impl Camera {
             samples_per_pixel: 0,
             pixel_samples_scale: 0.0,
             max_depth: 0,
+            background: Color::new(1.0, 1.0, 1.0),
             vfov: 90.0,
             lookfrom: Point3::new(0.0, 0.0, 0.0),
             lookat: Point3::new(0.0, 0.0, -1.0),

@@ -1,6 +1,6 @@
 use crate::rtweekend::random_double;
 use crate::texture::{CheckerTexture, SolidColor, Texture};
-use crate::vec3::Vec3;
+use crate::vec3::{Point3, Vec3};
 use crate::{color::Color, hittable::HitRecord, ray::Ray, rtweekend};
 use rand::random;
 use std::cmp::min;
@@ -16,6 +16,10 @@ pub trait Material: Send + Sync {
         scattered: &mut Ray,
     ) -> bool {
         false
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+        Color::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -125,5 +129,27 @@ impl Material for Dielectric {
 
         *scattered = Ray::new_with_time(rec.p, direction, r_in.time());
         true
+    }
+}
+
+pub struct DiffuseLight {
+    tex: Arc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    pub fn new_from_texture(tex: Arc<dyn Texture>) -> Self {
+        Self { tex }
+    }
+
+    pub fn new_from_color(c: Color) -> Self {
+        Self {
+            tex: Arc::new(SolidColor::new(c)),
+        }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+        self.tex.value(u, v, p)
     }
 }
