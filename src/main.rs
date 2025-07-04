@@ -7,6 +7,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod perlin;
+mod quad;
 mod ray;
 mod rtw_stb_image;
 mod rtweekend;
@@ -18,6 +19,7 @@ use crate::bvh::BVHNode;
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Dielectric;
+use crate::quad::Quad;
 use crate::rtweekend::{INFINITY, random_double};
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor, Texture};
 use color::{Color, write_color};
@@ -257,6 +259,83 @@ pub fn perlin_spheres() -> io::Result<()> {
     Ok(())
 }
 
+pub fn quads() -> io::Result<()> {
+    let path = std::path::Path::new("output/book2/image16.ppm");
+    let prefix = path.parent().unwrap();
+    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+
+    let file = File::create("output/book2/image16.ppm").expect("Failed to create file");
+    let mut out = BufWriter::new(file);
+
+    let mut world = HittableList::new();
+
+    let left_red = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        1.0, 0.2, 0.2,
+    )))));
+    let back_green = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.2, 1.0, 0.2,
+    )))));
+    let right_blue = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.2, 0.2, 1.0,
+    )))));
+    let upper_orange = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        1.0, 0.5, 0.0,
+    )))));
+    let lower_teal = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.2, 0.8, 0.8,
+    )))));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(-3.0, -2.0, 5.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        left_red,
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(-2.0, -2.0, 0.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        back_green,
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(3.0, -2.0, 1.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        right_blue,
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(-2.0, 3.0, 1.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        upper_orange,
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(-2.0, -3.0, 5.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        lower_teal,
+    )));
+
+    let mut cam = Camera::new(1.0, 400);
+
+    cam.aspect_ratio = 1.0;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+
+    cam.vfov = 80.0;
+    cam.lookfrom = Point3::new(0.0, 0.0, 9.0);
+    cam.lookat = Point3::new(0.0, 0.0, 0.0);
+    cam.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    cam.defocus_angle = 0.0;
+
+    cam.initialize();
+
+    cam.render(&world, &mut out)?;
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
-    perlin_spheres()
+    quads()
 }
