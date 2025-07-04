@@ -2,6 +2,7 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
 use std::cmp::{max, min};
+use std::ops::Add;
 
 #[derive(Clone, Copy)]
 pub struct AABB {
@@ -129,5 +130,31 @@ impl AABB {
             }
         }
         true
+    }
+}
+
+impl AABB {
+    pub fn offset(self, offset: Vec3) -> AABB {
+        AABB {
+            x: Interval {
+                min: self.x.min + offset.x(),
+                max: self.x.max + offset.x(),
+            },
+            y: Interval {
+                min: self.y.min + offset.y(),
+                max: self.y.max + offset.y(),
+            },
+            z: Interval {
+                min: self.z.min + offset.z(),
+                max: self.z.max + offset.z(),
+            },
+        }
+    }
+}
+
+impl Add<Vec3> for AABB {
+    type Output = AABB;
+    fn add(self, offset: Vec3) -> AABB {
+        self.offset(offset)
     }
 }
