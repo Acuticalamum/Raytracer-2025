@@ -1,13 +1,14 @@
 use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
-use crate::pdf::{CosinePdf, Pdf, SpherePdf};
+use crate::pdf::{CosinePdf, HittablePdf, Pdf, SpherePdf};
 use crate::ray::Ray;
 use crate::rtweekend::{INFINITY, degrees_to_radians};
 use crate::vec3::{Point3, Vec3};
 use crate::{color, rtweekend};
 use std::f64::consts::PI;
 use std::io::{self, Write};
+use std::sync::Arc;
 
 pub struct Camera {
     pub aspect_ratio: f64,
@@ -37,7 +38,13 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn ray_color(&self, r: &Ray, depth: usize, world: &dyn Hittable) -> Color {
+    pub fn ray_color(
+        &self,
+        r: &Ray,
+        depth: usize,
+        world: &dyn Hittable,
+        lights: Arc<dyn Hittable>,
+    ) -> Color {
         if depth == 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -70,15 +77,15 @@ impl Camera {
                     rtweekend::random_double_range(227.0, 332.0),
                 );
 
-                let surface_pdf = CosinePdf::new(rec.normal);
-                scattered = Ray::new_with_time(rec.p, surface_pdf.generate(), r.time());
-                pdf_value = surface_pdf.value(scattered.direction());
+                let light_pdf = HittablePdf::new(lights.clone(), rec.p);
+                scattered = Ray::new_with_time(rec.p, light_pdf.generate(), r.time());
+                pdf_value = light_pdf.value(scattered.direction());
 
                 let scattering_pdf = rec.mat.unwrap().scattering_pdf(&r, &rec__, &scattered);
 
-                color_from_scatter =
-                    attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world)
-                        / pdf_value;
+                let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
+
+                color_from_scatter = attenuation * scattering_pdf * sample_color / pdf_value;
             }
             return color_from_emission + color_from_scatter;
         }
@@ -190,7 +197,12 @@ impl Camera {
         Vec3::new(px, py, 0.0)
     }
 
-    pub fn render<W: Write>(&self, world: &dyn Hittable, writer: &mut W) -> io::Result<()> {
+    pub fn render<W: Write>(
+        &self,
+        world: &dyn Hittable,
+        lights: Arc<dyn Hittable>,
+        writer: &mut W,
+    ) -> io::Result<()> {
         writeln!(
             writer,
             "P3\n{} {}\n255",
@@ -207,7 +219,7 @@ impl Camera {
                 for s_j in 0..self.sqrt_spp {
                     for s_i in 0..self.sqrt_spp {
                         let r = self.get_ray(i, j, s_i, s_j);
-                        pixel_color += self.ray_color(&r, self.max_depth, world);
+                        pixel_color += self.ray_color(&r, self.max_depth, world, lights.clone());
                     }
                 }
 

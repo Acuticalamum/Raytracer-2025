@@ -9,6 +9,10 @@ use std::f64;
 use std::f64::consts::PI;
 use std::sync::Arc;
 
+pub struct EmptyMaterial;
+
+impl Material for EmptyMaterial {}
+
 pub trait Material: Send + Sync {
     fn scatter(
         &self,
