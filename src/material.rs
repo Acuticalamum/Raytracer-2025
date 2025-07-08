@@ -21,7 +21,7 @@ pub trait Material: Send + Sync {
         false
     }
 
-    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Point3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
 
@@ -165,8 +165,13 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
-        self.tex.value(u, v, p)
+    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Point3) -> Color {
+        if !rec.front_face {
+            Color::new(0.0, 0.0, 0.0)
+        }
+        else {
+            self.tex.value(u, v, p)
+        }
     }
 }
 

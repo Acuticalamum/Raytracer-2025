@@ -398,11 +398,11 @@ pub fn simple_light() -> io::Result<()> {
 }
 
 pub fn cornell_box() -> io::Result<()> {
-    let path = std::path::Path::new("output/book3/image7.ppm");
+    let path = std::path::Path::new("output/book3/image8.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book3/image7.ppm").expect("Failed to create file");
+    let file = File::create("output/book3/image8.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let mut world = HittableList::new();

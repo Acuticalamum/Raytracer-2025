@@ -49,7 +49,7 @@ impl Camera {
         let mut pdf_value = 0.0;
         if rec.mat.is_some() {
             let rec_ = rec.clone();
-            let color_from_emission = rec.clone().mat.unwrap().emitted(rec.u, rec.v, &rec.p);
+            let color_from_emission = rec.clone().mat.unwrap().emitted(r, &rec, rec.u, rec.v, &rec.p);
             let mut color_from_scatter = Color::new(0.0, 0.0, 0.0);
             let rec__ = rec_.clone();
             if rec_.mat.unwrap().scatter(
