@@ -21,6 +21,10 @@ pub trait Material: Send + Sync {
     fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
+
+    fn scattering_pdf(&self, r: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        0.0
+    }
 }
 
 pub struct Lambertian {
@@ -48,6 +52,15 @@ impl Material for Lambertian {
         *scattered = Ray::new_with_time(rec.p, scatter_direction, _r_in.time());
         *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
         true
+    }
+
+    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cos_theta = Vec3::dot(rec.normal, Vec3::unit_vector(scattered.direction()));
+        if cos_theta < 0.0 {
+            0.0
+        } else {
+            cos_theta / std::f64::consts::PI
+        }
     }
 }
 

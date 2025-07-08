@@ -5,6 +5,7 @@ use crate::ray::Ray;
 use crate::rtweekend::{INFINITY, degrees_to_radians};
 use crate::vec3::{Point3, Vec3};
 use crate::{color, rtweekend};
+use std::f64::consts::PI;
 use std::io::{self, Write};
 
 pub struct Camera {
@@ -47,7 +48,7 @@ impl Camera {
         let mut attenuation = Color::new(0.0, 0.0, 0.0);
         if rec.mat.is_some() {
             let rec_ = rec.clone();
-            let color_from_emission = rec.mat.unwrap().emitted(rec.u, rec.v, &rec.p);
+            let color_from_emission = rec.clone().mat.unwrap().emitted(rec.u, rec.v, &rec.p);
             let mut color_from_scatter = Color::new(0.0, 0.0, 0.0);
             let rec__ = rec_.clone();
             if rec_
@@ -55,7 +56,11 @@ impl Camera {
                 .unwrap()
                 .scatter(r, &rec__, &mut attenuation, &mut scattered)
             {
-                color_from_scatter = attenuation * self.ray_color(&scattered, depth - 1, world);
+                let scattering_pdf = rec.clone().mat.unwrap().scattering_pdf(r, &rec, &scattered);
+                let pdf_value = 0.5 / PI;
+                color_from_scatter =
+                    attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world)
+                        / pdf_value;
             }
             return color_from_emission + color_from_scatter;
         }
