@@ -52,11 +52,13 @@ impl Camera {
             let color_from_emission = rec.clone().mat.unwrap().emitted(rec.u, rec.v, &rec.p);
             let mut color_from_scatter = Color::new(0.0, 0.0, 0.0);
             let rec__ = rec_.clone();
-            if rec_
-                .mat
-                .unwrap()
-                .scatter(r, &rec__, &mut attenuation, &mut scattered, &mut pdf_value)
-            {
+            if rec_.mat.unwrap().scatter(
+                r,
+                &rec__,
+                &mut attenuation,
+                &mut scattered,
+                &mut pdf_value,
+            ) {
                 let scattering_pdf = rec.clone().mat.unwrap().scattering_pdf(r, &rec, &scattered);
                 let pdf_value = scattering_pdf;
                 color_from_scatter =

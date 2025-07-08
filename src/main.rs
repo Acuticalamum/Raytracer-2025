@@ -7,6 +7,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
+mod onb;
 mod perlin;
 mod quad;
 mod ray;
@@ -15,7 +16,6 @@ mod rtweekend;
 mod sphere;
 mod texture;
 mod vec3;
-mod onb;
 
 use crate::bvh::BVHNode;
 use crate::camera::Camera;

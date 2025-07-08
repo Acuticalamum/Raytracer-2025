@@ -98,7 +98,7 @@ impl Vec3 {
         let x = phi.cos() * r2.sqrt();
         let y = phi.sin() * r2.sqrt();
         let z = (1.0 - r2).sqrt();
-        
+
         Vec3::new(x, y, z)
     }
 }

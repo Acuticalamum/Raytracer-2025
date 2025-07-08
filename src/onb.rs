@@ -1,5 +1,5 @@
-use vec3::Vec3;
 use crate::vec3;
+use vec3::Vec3;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ONB {
@@ -31,7 +31,7 @@ impl ONB {
     pub fn w(&self) -> Vec3 {
         self.axis[2]
     }
-    
+
     pub fn transform(&self, local: Vec3) -> Vec3 {
         self.u() * local.x + self.v() * local.y + self.w() * local.z
     }

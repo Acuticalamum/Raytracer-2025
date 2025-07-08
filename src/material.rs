@@ -1,3 +1,4 @@
+use crate::onb::ONB;
 use crate::rtweekend::random_double;
 use crate::texture::{CheckerTexture, SolidColor, Texture};
 use crate::vec3::{Point3, Vec3};
@@ -7,7 +8,6 @@ use std::cmp::min;
 use std::f64;
 use std::f64::consts::PI;
 use std::sync::Arc;
-use crate::onb::ONB;
 
 pub trait Material: Send + Sync {
     fn scatter(
