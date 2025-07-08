@@ -17,6 +17,8 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     pub samples_per_pixel: u32,
     pixel_samples_scale: f64,
+    sqrt_spp: u32,
+    recip_sqrt_spp: f64,
     pub max_depth: usize,
     pub background: Color,
     pub vfov: f64,
@@ -71,8 +73,10 @@ impl Camera {
             pixel00_loc: Point3::new(0.0, 0.0, 0.0),
             pixel_delta_u: Vec3::new(0.0, 0.0, 0.0),
             pixel_delta_v: Vec3::new(0.0, 0.0, 0.0),
-            samples_per_pixel: 0,
-            pixel_samples_scale: 0.0,
+            samples_per_pixel: 1,
+            pixel_samples_scale: 1.0,
+            sqrt_spp: 1,
+            recip_sqrt_spp: 1.0,
             max_depth: 0,
             background: Color::new(1.0, 1.0, 1.0),
             vfov: 90.0,
@@ -96,8 +100,10 @@ impl Camera {
         if self.image_height < 1 {
             self.image_height = 1;
         }
-        self.samples_per_pixel = 100;
-        self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
+        //self.samples_per_pixel = 100;
+        self.sqrt_spp = (self.samples_per_pixel as f64).sqrt() as u32;
+        self.pixel_samples_scale = 1.0 / (self.sqrt_spp as f64 * self.sqrt_spp as f64);
+        self.recip_sqrt_spp = 1.0 / (self.sqrt_spp as f64);
         self.center = self.lookfrom;
 
         let theta = degrees_to_radians(self.vfov);
@@ -119,7 +125,7 @@ impl Camera {
             self.center - self.w * self.focus_dist - viewport_u / 2.0 - viewport_v / 2.0;
 
         self.pixel00_loc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
-        self.max_depth = 10;
+        //self.max_depth = 10;
 
         let defocus_radius = self.focus_dist * degrees_to_radians(self.defocus_angle / 2.0).tan();
         self.defocus_disk_u = self.u * defocus_radius;
@@ -139,8 +145,8 @@ impl Camera {
         self.center + self.defocus_disk_u * p.x() + self.defocus_disk_v * p.y()
     }
 
-    pub fn get_ray(&self, i: usize, j: usize) -> Ray {
-        let offset = self.sample_square();
+    pub fn get_ray(&self, i: usize, j: usize, s_i: u32, s_j: u32) -> Ray {
+        let offset = self.sample_square_stratified(s_i, s_j);
         let pixel_sample = self.pixel00_loc
             + self.pixel_delta_u * (i as f64 + offset.x())
             + self.pixel_delta_v * (j as f64 + offset.y());
@@ -153,6 +159,12 @@ impl Camera {
         let ray_direction = pixel_sample - ray_origin;
         let ray_time = rtweekend::random_double();
         Ray::new_with_time(ray_origin, ray_direction, ray_time)
+    }
+
+    fn sample_square_stratified(&self, s_i: u32, s_j: u32) -> Vec3 {
+        let px = ((s_i as f64 + rtweekend::random_double()) * self.recip_sqrt_spp) - 0.5;
+        let py = ((s_j as f64 + rtweekend::random_double()) * self.recip_sqrt_spp) - 0.5;
+        Vec3::new(px, py, 0.0)
     }
 
     pub fn render<W: Write>(&self, world: &dyn Hittable, writer: &mut W) -> io::Result<()> {
@@ -169,9 +181,11 @@ impl Camera {
             for i in 0..self.image_width {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
 
-                for _ in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(i, j);
-                    pixel_color += self.ray_color(&ray, self.max_depth, world);
+                for s_j in 0..self.sqrt_spp {
+                    for s_i in 0..self.sqrt_spp {
+                        let r = self.get_ray(i, j, s_i, s_j);
+                        pixel_color += self.ray_color(&r, self.max_depth, world);
+                    }
                 }
 
                 pixel_color *= self.pixel_samples_scale;
