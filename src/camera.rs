@@ -1,6 +1,7 @@
 use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
+use crate::pdf::{CosinePdf, Pdf, SpherePdf};
 use crate::ray::Ray;
 use crate::rtweekend::{INFINITY, degrees_to_radians};
 use crate::vec3::{Point3, Vec3};
@@ -49,7 +50,11 @@ impl Camera {
         let mut pdf_value = 0.0;
         if rec.mat.is_some() {
             let rec_ = rec.clone();
-            let color_from_emission = rec.clone().mat.unwrap().emitted(r, &rec, rec.u, rec.v, &rec.p);
+            let color_from_emission = rec
+                .clone()
+                .mat
+                .unwrap()
+                .emitted(r, &rec, rec.u, rec.v, &rec.p);
             let mut color_from_scatter = Color::new(0.0, 0.0, 0.0);
             let rec__ = rec_.clone();
             if rec_.mat.unwrap().scatter(
@@ -65,22 +70,9 @@ impl Camera {
                     rtweekend::random_double_range(227.0, 332.0),
                 );
 
-                let mut to_light = on_light - rec.p;
-                let distance_squared = to_light.length_squared();
-                to_light = Vec3::unit_vector(to_light);
-
-                if Vec3::dot(to_light, rec.normal) < 0.0 {
-                    return color_from_emission;
-                }
-
-                let light_area = (343.0 - 213.0) * (332.0 - 227.0);
-                let light_cosine = to_light.y().abs();
-                if light_cosine < 0.000001 {
-                    return color_from_emission;
-                }
-
-                let pdf_value = distance_squared / (light_cosine * light_area);
-                let scattered = Ray::new_with_time(rec.p, to_light, r.time());
+                let surface_pdf = CosinePdf::new(rec.normal);
+                scattered = Ray::new_with_time(rec.p, surface_pdf.generate(), r.time());
+                pdf_value = surface_pdf.value(scattered.direction());
 
                 let scattering_pdf = rec.mat.unwrap().scattering_pdf(&r, &rec__, &scattered);
 

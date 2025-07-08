@@ -168,8 +168,7 @@ impl Material for DiffuseLight {
     fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Point3) -> Color {
         if !rec.front_face {
             Color::new(0.0, 0.0, 0.0)
-        }
-        else {
+        } else {
             self.tex.value(u, v, p)
         }
     }
