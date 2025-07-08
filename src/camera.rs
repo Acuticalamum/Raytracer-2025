@@ -59,8 +59,31 @@ impl Camera {
                 &mut scattered,
                 &mut pdf_value,
             ) {
-                let scattering_pdf = rec.clone().mat.unwrap().scattering_pdf(r, &rec, &scattered);
-                let pdf_value = scattering_pdf;
+                let on_light = Point3::new(
+                    rtweekend::random_double_range(213.0, 343.0),
+                    554.0,
+                    rtweekend::random_double_range(227.0, 332.0),
+                );
+
+                let mut to_light = on_light - rec.p;
+                let distance_squared = to_light.length_squared();
+                to_light = Vec3::unit_vector(to_light);
+
+                if Vec3::dot(to_light, rec.normal) < 0.0 {
+                    return color_from_emission;
+                }
+
+                let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+                let light_cosine = to_light.y().abs();
+                if light_cosine < 0.000001 {
+                    return color_from_emission;
+                }
+
+                let pdf_value = distance_squared / (light_cosine * light_area);
+                let scattered = Ray::new_with_time(rec.p, to_light, r.time());
+
+                let scattering_pdf = rec.mat.unwrap().scattering_pdf(&r, &rec__, &scattered);
+
                 color_from_scatter =
                     attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world)
                         / pdf_value;
