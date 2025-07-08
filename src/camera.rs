@@ -46,6 +46,7 @@ impl Camera {
         }
         let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
         let mut attenuation = Color::new(0.0, 0.0, 0.0);
+        let mut pdf_value = 0.0;
         if rec.mat.is_some() {
             let rec_ = rec.clone();
             let color_from_emission = rec.clone().mat.unwrap().emitted(rec.u, rec.v, &rec.p);
@@ -54,10 +55,10 @@ impl Camera {
             if rec_
                 .mat
                 .unwrap()
-                .scatter(r, &rec__, &mut attenuation, &mut scattered)
+                .scatter(r, &rec__, &mut attenuation, &mut scattered, &mut pdf_value)
             {
                 let scattering_pdf = rec.clone().mat.unwrap().scattering_pdf(r, &rec, &scattered);
-                let pdf_value = 0.5 / PI;
+                let pdf_value = scattering_pdf;
                 color_from_scatter =
                     attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world)
                         / pdf_value;
