@@ -43,11 +43,11 @@ use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 pub fn cornell_box() -> io::Result<()> {
-    let path = std::path::Path::new("output/book3/image10.ppm");
+    let path = std::path::Path::new("output/book3/image11.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book3/image10.ppm").expect("Failed to create file");
+    let file = File::create("output/book3/image11.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let mut world = HittableList::new();

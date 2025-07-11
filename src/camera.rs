@@ -1,7 +1,7 @@
 use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
-use crate::pdf::{CosinePdf, HittablePdf, Pdf, SpherePdf};
+use crate::pdf::{CosinePdf, HittablePdf, MixturePdf, Pdf, SpherePdf};
 use crate::ray::Ray;
 use crate::rtweekend::{INFINITY, degrees_to_radians};
 use crate::vec3::{Point3, Vec3};
@@ -71,15 +71,12 @@ impl Camera {
                 &mut scattered,
                 &mut pdf_value,
             ) {
-                let on_light = Point3::new(
-                    rtweekend::random_double_range(213.0, 343.0),
-                    554.0,
-                    rtweekend::random_double_range(227.0, 332.0),
-                );
+                let p0 = Arc::new(HittablePdf::new(lights.clone(), rec.p));
+                let p1 = Arc::new(CosinePdf::new(rec.normal));
+                let mixed_pdf = MixturePdf::new(p0, p1);
 
-                let light_pdf = HittablePdf::new(lights.clone(), rec.p);
-                scattered = Ray::new_with_time(rec.p, light_pdf.generate(), r.time());
-                pdf_value = light_pdf.value(scattered.direction());
+                scattered = Ray::new_with_time(rec.p, mixed_pdf.generate(), r.time());
+                pdf_value = mixed_pdf.value(scattered.direction());
 
                 let scattering_pdf = rec.mat.unwrap().scattering_pdf(&r, &rec__, &scattered);
 
