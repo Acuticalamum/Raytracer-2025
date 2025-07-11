@@ -131,6 +131,8 @@ pub fn cornell_box() -> io::Result<()> {
         Some(glass),
     ));
 
+    world.add(sphere);
+
     let empty_material: Arc<dyn Material> = Arc::new(material::EmptyMaterial);
 
     let lights = Quad::new(
