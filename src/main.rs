@@ -43,11 +43,11 @@ use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 pub fn cornell_box() -> io::Result<()> {
-    let path = std::path::Path::new("output/book3/image12.ppm");
+    let path = std::path::Path::new("output/book3/image13.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book3/image12.ppm").expect("Failed to create file");
+    let file = File::create("output/book3/image13.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let mut world = HittableList::new();
@@ -116,14 +116,20 @@ pub fn cornell_box() -> io::Result<()> {
     let box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
     world.add(box1);
 
-    let box2 = quad::make_box(
+    /*let box2 = quad::make_box(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 165.0, 165.0),
         white.clone(),
     );
     let box2 = Arc::new(RotateY::new(box2, -18.0));
     let box2 = Arc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
-    world.add(box2);
+    world.add(box2);*/
+    let glass = Arc::new(Dielectric::new(1.5));
+    let sphere = Arc::new(Sphere::static_new(
+        Point3::new(190.0, 90.0, 190.0),
+        90.0,
+        Some(glass),
+    ));
 
     let empty_material: Arc<dyn Material> = Arc::new(material::EmptyMaterial);
 
