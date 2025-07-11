@@ -43,11 +43,11 @@ use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 pub fn cornell_box() -> io::Result<()> {
-    let path = std::path::Path::new("output/book3/image11.ppm");
+    let path = std::path::Path::new("output/book3/image12.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book3/image11.ppm").expect("Failed to create file");
+    let file = File::create("output/book3/image12.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let mut world = HittableList::new();
@@ -105,10 +105,12 @@ pub fn cornell_box() -> io::Result<()> {
         white.clone(),
     )));
 
+    let aluminum = Arc::new(Metal::new(Color::new(0.8, 0.85, 0.88), 0.0));
+
     let box1 = quad::make_box(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 330.0, 165.0),
-        white.clone(),
+        aluminum.clone(),
     );
     let box1 = Arc::new(RotateY::new(box1, 15.0));
     let box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
@@ -138,7 +140,7 @@ pub fn cornell_box() -> io::Result<()> {
 
     cam.aspect_ratio = 1.0;
     cam.image_width = 600;
-    cam.samples_per_pixel = 10;
+    cam.samples_per_pixel = 100;
     cam.max_depth = 50;
     cam.background = Color::new(0.0, 0.0, 0.0);
 
