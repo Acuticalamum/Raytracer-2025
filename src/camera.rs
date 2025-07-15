@@ -7,6 +7,7 @@ use crate::ray::Ray;
 use crate::rtweekend::{INFINITY, degrees_to_radians};
 use crate::vec3::{Point3, Vec3};
 use crate::{color, rtweekend};
+use rayon::prelude::*;
 use std::f64::consts::PI;
 use std::io::{self, Write};
 use std::sync::Arc;
@@ -205,23 +206,36 @@ impl Camera {
             self.image_width, self.image_height
         )?;
 
-        for j in (0..self.image_height) {
-            eprint!("\rScanlines remaining: {} ", j);
-            io::stderr().flush().unwrap();
+        let rows: Vec<String> = (0..self.image_height)
+            .into_par_iter()
+            .map(|j| {
+                eprint!("\rScanlines remaining: {} ", j);
+                let mut row = String::new();
+                let lights = lights.clone();
 
-            for i in 0..self.image_width {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                for i in 0..self.image_width {
+                    let mut pixel_color = Color::new(0.0, 0.0, 0.0);
 
-                for s_j in 0..self.sqrt_spp {
-                    for s_i in 0..self.sqrt_spp {
-                        let r = self.get_ray(i, j, s_i, s_j);
-                        pixel_color += self.ray_color(&r, self.max_depth, world, lights.clone());
+                    for s_j in 0..self.sqrt_spp {
+                        for s_i in 0..self.sqrt_spp {
+                            let r = self.get_ray(i, j, s_i, s_j);
+                            pixel_color +=
+                                self.ray_color(&r, self.max_depth, world, lights.clone());
+                        }
                     }
-                }
 
-                pixel_color *= self.pixel_samples_scale;
-                color::write_color(writer, &pixel_color)?;
-            }
+                    pixel_color *= self.pixel_samples_scale;
+
+                    let mut buf = Vec::new();
+                    write_color(&mut buf, &pixel_color).unwrap();
+                    row.push_str(&String::from_utf8(buf).unwrap());
+                }
+                row
+            })
+            .collect();
+
+        for line in rows {
+            write!(writer, "{}", line)?;
         }
 
         eprintln!("\rDone.");

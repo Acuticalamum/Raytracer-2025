@@ -7,6 +7,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
+mod obj;
 mod onb;
 mod pdf;
 mod perlin;
@@ -16,6 +17,7 @@ mod rtw_stb_image;
 mod rtweekend;
 mod sphere;
 mod texture;
+mod triangle;
 mod vec3;
 
 use crate::bvh::BVHNode;
@@ -26,6 +28,7 @@ use crate::material::Dielectric;
 use crate::quad::Quad;
 use crate::rtweekend::{INFINITY, random_double};
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor, Texture};
+use crate::triangle::Triangle;
 use color::{Color, write_color};
 use console::style;
 use hittable_list::HittableList;
@@ -43,11 +46,11 @@ use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
 pub fn cornell_box() -> io::Result<()> {
-    let path = std::path::Path::new("output/book3/image15.ppm");
+    let path = std::path::Path::new("output/book3/image17.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/book3/image15.ppm").expect("Failed to create file");
+    let file = File::create("output/book3/image17.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
     let mut world = HittableList::new();
@@ -61,6 +64,9 @@ pub fn cornell_box() -> io::Result<()> {
     let green = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
         0.12, 0.45, 0.15,
     )))));
+    let blue = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.20, 0.40, 0.80,
+    )))));
     let light = Arc::new(DiffuseLight::new_from_color(Color::new(15.0, 15.0, 15.0)));
 
     world.add(Arc::new(Quad::new(
@@ -69,6 +75,13 @@ pub fn cornell_box() -> io::Result<()> {
         Vec3::new(0.0, 0.0, 555.0),
         green.clone(),
     )));
+
+    /*world.add(Arc::new(Triangle::new_with_vector(
+        Point3::new(100.0, 400.0, 500.0),
+        Vec3::new(0.0, 150.0, 0.0),
+        Vec3::new(150.0, 0.0, 0.0),
+        blue.clone(),
+    )));*/
 
     world.add(Arc::new(Quad::new(
         Point3::new(0.0, 0.0, 0.0),
@@ -131,7 +144,11 @@ pub fn cornell_box() -> io::Result<()> {
         Some(glass),
     ));
 
-    world.add(sphere);
+    //world.add(sphere);
+
+    let coffin = Arc::new(obj::load_obj_model("objects/coffin.obj", 50.0));
+    let coffin = Arc::new(Translate::new(coffin, Vec3::new(100.0, 100.0, 400.0)));
+    world.add(coffin);
 
     let empty_material: Arc<dyn Material> = Arc::new(material::EmptyMaterial);
 
@@ -155,7 +172,7 @@ pub fn cornell_box() -> io::Result<()> {
 
     cam.aspect_ratio = 1.0;
     cam.image_width = 600;
-    cam.samples_per_pixel = 1000;
+    cam.samples_per_pixel = 20;
     cam.max_depth = 50;
     cam.background = Color::new(0.0, 0.0, 0.0);
 
@@ -167,6 +184,10 @@ pub fn cornell_box() -> io::Result<()> {
     cam.defocus_angle = 0.0;
     cam.initialize();
     cam.render(&world, lights, &mut out)?;
+    Ok(())
+}
+
+pub fn final_scene() -> io::Result<()> {
     Ok(())
 }
 

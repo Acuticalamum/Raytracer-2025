@@ -4,7 +4,7 @@ use crate::vec3::{Point3, Vec3};
 use std::f64::consts::PI;
 use std::sync::Arc;
 
-pub trait Pdf {
+pub trait Pdf: Send + Sync {
     fn value(&self, direction: Vec3) -> f64;
     fn generate(&self) -> Vec3;
 }

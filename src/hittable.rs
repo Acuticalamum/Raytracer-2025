@@ -39,7 +39,7 @@ impl Default for HitRecord {
         }
     }
 }
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
     fn bounding_box(&self) -> AABB;
     fn pdf_value(&self, origin: Point3, direction: Vec3) -> f64 {
