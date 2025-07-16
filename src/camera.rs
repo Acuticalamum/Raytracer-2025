@@ -215,16 +215,23 @@ impl Camera {
 
                 for i in 0..self.image_width {
                     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-
+                    let mut valid_samples = self.sqrt_spp as f64 * self.sqrt_spp as f64;
                     for s_j in 0..self.sqrt_spp {
                         for s_i in 0..self.sqrt_spp {
                             let r = self.get_ray(i, j, s_i, s_j);
-                            pixel_color +=
-                                self.ray_color(&r, self.max_depth, world, lights.clone());
+                            let r_col = self.ray_color(&r, self.max_depth, world, lights.clone());
+                            if (r_col.x() != r_col.x()
+                                || r_col.y() != r_col.y()
+                                || r_col.z() != r_col.z())
+                            {
+                                valid_samples -= 1.0;
+                            } else {
+                                pixel_color += r_col;
+                            }
                         }
                     }
 
-                    pixel_color *= self.pixel_samples_scale;
+                    pixel_color *= 1.0 / valid_samples;
 
                     let mut buf = Vec::new();
                     write_color(&mut buf, &pixel_color).unwrap();
