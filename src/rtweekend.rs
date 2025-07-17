@@ -1,6 +1,5 @@
 use rand::Rng;
 use std::f64::consts::PI;
-use std::sync::Arc;
 
 pub const INFINITY: f64 = f64::INFINITY;
 

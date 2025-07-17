@@ -17,7 +17,6 @@ pub fn write_color<W: Write>(out: &mut W, pixel_color: &Color) -> io::Result<()>
     let mut b = pixel_color.z();
 
     if r != r {
-        println!("uuu");
         r = 0.0;
     }
     if g != g {

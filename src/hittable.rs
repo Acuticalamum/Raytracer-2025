@@ -42,10 +42,10 @@ impl Default for HitRecord {
 pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
     fn bounding_box(&self) -> AABB;
-    fn pdf_value(&self, origin: Point3, direction: Vec3) -> f64 {
+    fn pdf_value(&self, _origin: Point3, _direction: Vec3) -> f64 {
         0.0
     }
-    fn random(&self, origin: Point3) -> Vec3 {
+    fn random(&self, _origin: Point3) -> Vec3 {
         Vec3::new(1.0, 0.0, 0.0)
     }
 }
@@ -107,7 +107,7 @@ impl RotateY {
                     let new_x = cos_theta * x_val + sin_theta * z_val;
                     let new_z = -sin_theta * x_val + cos_theta * z_val;
 
-                    let tester = Vec3::new(new_x, y_val, new_z);
+                    let _tester = Vec3::new(new_x, y_val, new_z);
 
                     min.x = min.x.min(new_x);
                     max.x = max.x.max(new_x);

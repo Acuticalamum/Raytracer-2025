@@ -1,9 +1,7 @@
-use rand::prelude::*;
-use rand::rngs::ThreadRng;
-
-use crate::rtweekend;
 use crate::vec3::{Point3, Vec3};
 use array_init::array_init;
+use rand::prelude::*;
+use rand::rngs::ThreadRng;
 
 const POINT_COUNT: usize = 256;
 
@@ -15,7 +13,7 @@ pub struct Perlin {
 }
 
 impl Perlin {
-    pub fn new() -> Self {
+    pub fn _new() -> Self {
         let mut rng = rand::rng();
 
         let mut rand_vec = [Vec3::zero(); POINT_COUNT];
@@ -23,9 +21,9 @@ impl Perlin {
             rand_vec[i] = Vec3::unit_vector(Vec3::random_range(-1.0, 1.0));
         }
 
-        let perm_x = Self::generate_perm(&mut rng);
-        let perm_y = Self::generate_perm(&mut rng);
-        let perm_z = Self::generate_perm(&mut rng);
+        let perm_x = Self::_generate_perm(&mut rng);
+        let perm_y = Self::_generate_perm(&mut rng);
+        let perm_z = Self::_generate_perm(&mut rng);
 
         Self {
             rand_vec,
@@ -73,13 +71,13 @@ impl Perlin {
         accum.abs()
     }
 
-    fn generate_perm(rng: &mut ThreadRng) -> [usize; POINT_COUNT] {
+    fn _generate_perm(rng: &mut ThreadRng) -> [usize; POINT_COUNT] {
         let mut p: [usize; POINT_COUNT] = array_init(|i| i);
-        Self::permute(&mut p, rng);
+        Self::_permute(&mut p, rng);
         p
     }
 
-    fn permute(p: &mut [usize; POINT_COUNT], rng: &mut ThreadRng) {
+    fn _permute(p: &mut [usize; POINT_COUNT], rng: &mut ThreadRng) {
         for i in (1..POINT_COUNT).rev() {
             let target = rng.random_range(0..=i);
             p.swap(i, target);

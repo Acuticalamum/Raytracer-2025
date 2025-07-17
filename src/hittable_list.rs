@@ -20,13 +20,13 @@ impl HittableList {
         }
     }
 
-    pub fn from(object: Arc<dyn Hittable>) -> Self {
+    pub fn _from(object: Arc<dyn Hittable>) -> Self {
         let mut list = Self::new();
         list.add(object);
         list
     }
 
-    pub fn clear(&mut self) {
+    pub fn _clear(&mut self) {
         self.objects.clear();
     }
 

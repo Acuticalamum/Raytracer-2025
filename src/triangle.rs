@@ -1,8 +1,6 @@
-use crate::rtweekend::random_double;
 use crate::{
     aabb::AABB,
     hittable::{HitRecord, Hittable},
-    hittable_list::HittableList,
     interval::Interval,
     material::Material,
     ray::Ray,
@@ -19,19 +17,19 @@ pub struct Triangle {
     mat: Arc<dyn Material>,
     bbox: AABB,
     normal: Vec3,
-    D: f64,
+    d: f64,
     area: f64,
 }
 
 impl Triangle {
-    pub fn new_with_points(q: Point3, a: Point3, b: Point3, mat: Arc<dyn Material>) -> Self {
-        Triangle::new_with_vector(q, a - q, b - q, mat)
+    pub fn _new_with_points(q: Point3, a: Point3, b: Point3, mat: Arc<dyn Material>) -> Self {
+        Triangle::_new_with_vector(q, a - q, b - q, mat)
     }
 
-    pub fn new_with_vector(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material>) -> Self {
+    pub fn _new_with_vector(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material>) -> Self {
         let n = Vec3::cross(u, v);
         let normal = Vec3::unit_vector(n);
-        let D = Vec3::dot(q, normal);
+        let d = Vec3::dot(q, normal);
         let w = n / Vec3::dot(n, n);
         let area = n.length() / 2.0;
         let mut quad = Self {
@@ -42,14 +40,14 @@ impl Triangle {
             mat,
             bbox: AABB::empty(),
             normal,
-            D,
+            d,
             area,
         };
-        quad.set_bounding_box();
+        quad._set_bounding_box();
         quad
     }
 
-    fn set_bounding_box(&mut self) {
+    fn _set_bounding_box(&mut self) {
         let diagonal1 = AABB::from_points(self.q, self.q + self.u + self.v);
         let diagonal2 = AABB::from_points(self.q + self.u, self.q + self.v);
         self.bbox = AABB::from_boxes(diagonal1, diagonal2);
@@ -78,7 +76,7 @@ impl Hittable for Triangle {
             return false;
         }
 
-        let t = (self.D - Vec3::dot(self.normal, r.origin())) / denom;
+        let t = (self.d - Vec3::dot(self.normal, r.origin())) / denom;
 
         if !ray_t.contains(t) {
             return false;

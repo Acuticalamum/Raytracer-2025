@@ -1,7 +1,6 @@
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
-use std::cmp::{max, min};
 use std::ops::Add;
 
 #[derive(Clone, Copy)]
@@ -66,17 +65,9 @@ impl AABB {
 
     pub fn longest_axis(&self) -> usize {
         if self.x.size() > self.y.size() {
-            if (self.x.size() > self.z.size()) {
-                0
-            } else {
-                2
-            }
+            if self.x.size() > self.z.size() { 0 } else { 2 }
         } else {
-            if (self.y.size() > self.z.size()) {
-                1
-            } else {
-                2
-            }
+            if self.y.size() > self.z.size() { 1 } else { 2 }
         }
     }
 

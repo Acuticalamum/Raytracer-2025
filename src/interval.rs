@@ -15,7 +15,7 @@ impl Interval {
     pub fn new(min: f64, max: f64) -> Self {
         Self { min, max }
     }
-    pub fn new_ab(a: f64, b: f64) -> Self {
+    pub fn _new_ab(a: f64, b: f64) -> Self {
         let min = if a < b { a } else { b };
         let max = if a > b { a } else { b };
         Self::new(min, max)
@@ -26,7 +26,7 @@ impl Interval {
     pub fn contains(&self, x: f64) -> bool {
         self.min <= x && x <= self.max
     }
-    pub fn surrounds(&self, x: f64) -> bool {
+    pub fn _surrounds(&self, x: f64) -> bool {
         self.min < x && x < self.max
     }
     pub fn universe() -> Self {
@@ -35,7 +35,7 @@ impl Interval {
             max: f64::INFINITY,
         }
     }
-    pub fn intersection(&self, other: &Self) -> Self {
+    pub fn _intersection(&self, other: &Self) -> Self {
         let min = self.min.max(other.min);
         let max = self.max.min(other.max);
         if min <= max {

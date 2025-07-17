@@ -70,7 +70,7 @@ pub struct MixturePdf {
 }
 
 impl MixturePdf {
-    pub fn new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>) -> Self {
+    pub fn _new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>) -> Self {
         Self { p: [p0, p1] }
     }
 }

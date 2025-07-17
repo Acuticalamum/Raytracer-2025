@@ -23,385 +23,162 @@ mod vec3;
 use crate::bvh::BVHNode;
 use crate::camera::Camera;
 use crate::constant_medium::ConstantMedium;
-use crate::hittable::{HitRecord, Hittable, RotateY, Translate};
+use crate::hittable::{RotateY, Translate};
 use crate::material::Dielectric;
 use crate::quad::Quad;
-use crate::rtweekend::{INFINITY, random_double};
-use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor, Texture};
-use crate::triangle::Triangle;
-use color::{Color, write_color};
-use console::style;
+use crate::texture::{ImageTexture, NoiseTexture, SolidColor};
+use color::Color;
 use hittable_list::HittableList;
-use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
-use interval::Interval;
-use material::{DiffuseLight, EmptyMaterial, Lambertian, Material, Metal};
-use ray::Ray;
+use material::{DiffuseLight, Lambertian, Metal};
 use sphere::Sphere;
-use std::f64::consts::PI;
 use std::fs::File;
-use std::io::{self, BufWriter, Write};
-use std::option::Option;
+use std::io::{self, BufWriter};
 use std::sync::Arc;
 use vec3::{Point3, Vec3};
 
-pub fn final_scene() -> io::Result<()> {
-    let path = std::path::Path::new("output/final.ppm");
+fn final_scene(image_width: usize, samples_per_pixel: usize, max_depth: usize) -> io::Result<()> {
+    let path = std::path::Path::new("output/book2/Image23.ppm");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let file = File::create("output/final.ppm").expect("Failed to create file");
+    let file = File::create("output/book2/Image23.ppm").expect("Failed to create file");
     let mut out = BufWriter::new(file);
 
+    let mut boxes1 = HittableList::new();
+    let ground = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.48, 0.83, 0.53,
+    )))));
+
+    let boxes_per_side = 20;
+    for i in 0..boxes_per_side {
+        for j in 0..boxes_per_side {
+            let w = 100.0;
+            let x0 = -1000.0 + i as f64 * w;
+            let z0 = -1000.0 + j as f64 * w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = rtweekend::random_double_range(1.0, 101.0);
+            let z1 = z0 + w;
+
+            boxes1.add(quad::make_box(
+                Point3::new(x0, y0, z0),
+                Point3::new(x1, y1, z1),
+                ground.clone(),
+            ));
+        }
+    }
+
     let mut world = HittableList::new();
+    world.add(Arc::new(BVHNode::new_from_list(&mut boxes1)));
 
-    let gray = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
-        0.5, 0.5, 0.5,
+    let light = Arc::new(DiffuseLight::new_from_color(Color::new(7.0, 7.0, 7.0)));
+    world.add(Arc::new(Quad::new(
+        Point3::new(123.0, 554.0, 147.0),
+        Vec3::new(300.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 265.0),
+        light,
+    )));
+
+    let center1 = Point3::new(400.0, 400.0, 200.0);
+    let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
+    let sphere_material = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.7, 0.3, 0.1,
     )))));
+    world.add(Arc::new(Sphere::_new(
+        center1,
+        center2,
+        50.0,
+        Some(sphere_material),
+    )));
 
-    let dark_gray = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
-        0.15, 0.15, 0.15,
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(260.0, 150.0, 45.0),
+        50.0,
+        Some(Arc::new(Dielectric::new(1.5))),
+    )));
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(0.0, 150.0, 145.0),
+        50.0,
+        Some(Arc::new(Metal::new(Color::new(0.8, 0.8, 0.9), 1.0))),
+    )));
+
+    let boundary = Arc::new(Sphere::static_new(
+        Point3::new(360.0, 150.0, 145.0),
+        70.0,
+        Some(Arc::new(Dielectric::new(1.5))),
+    ));
+    world.add(boundary.clone());
+    world.add(Arc::new(ConstantMedium::_new_with_color(
+        boundary,
+        0.2,
+        Color::new(0.2, 0.4, 0.9),
+    )));
+
+    let boundary2 = Arc::new(Sphere::static_new(
+        Point3::new(0.0, 0.0, 0.0),
+        5000.0,
+        Some(Arc::new(Dielectric::new(1.5))),
+    ));
+    world.add(Arc::new(ConstantMedium::_new_with_color(
+        boundary2,
+        0.0001,
+        Color::new(1.0, 1.0, 1.0),
+    )));
+
+    let earth_texture = Arc::new(ImageTexture::new("earthmap.jpg"));
+    let earth_material = Arc::new(Lambertian::new(earth_texture));
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(400.0, 200.0, 400.0),
+        100.0,
+        Some(earth_material),
+    )));
+
+    let perlin_texture = Arc::new(NoiseTexture::_new(0.2));
+    world.add(Arc::new(Sphere::static_new(
+        Point3::new(220.0, 280.0, 300.0),
+        80.0,
+        Some(Arc::new(Lambertian::new(perlin_texture))),
+    )));
+
+    let mut boxes2 = HittableList::new();
+    let white = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
+        0.73, 0.73, 0.73,
     )))));
+    for _ in 0..1000 {
+        boxes2.add(Arc::new(Sphere::static_new(
+            Point3::random_range(0.0, 165.0),
+            10.0,
+            Some(white.clone()),
+        )));
+    }
 
-    let kachi = Arc::new(Lambertian::new(Arc::new(SolidColor::new(Color::new(
-        0.8, 0.52, 0.23,
-    )))));
-
-    let light = Arc::new(DiffuseLight::new_from_color(Color::new(18.0, 18.0, 18.0)));
-    let background = Arc::new(DiffuseLight::new_from_color(Color::new(3.0, 3.0, 3.0)));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(50.0, 0.0, 0.0),
-        Vec3::new(290.0, 0.0, 0.0),
-        Vec3::new(0.0, 100.0, 0.0),
-        //gray.clone(),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new("backwall.png")))),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(50.0, 0.0, 0.0),
-        Vec3::new(0.0, 100.0, 0.0),
-        Vec3::new(0.0, 0.0, 100.0),
-        gray.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(50.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 100.0),
-        Vec3::new(290.0, 0.0, 0.0),
-        gray.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(50.0, 100.0, 0.0),
-        Vec3::new(0.0, 0.0, 100.0),
-        Vec3::new(290.0, 0.0, 0.0),
-        gray.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(340.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 100.0),
-        Vec3::new(0.0, 100.0, 0.0),
-        gray.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(170.0, 97.0, 0.0),
-        Vec3::new(50.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 3.0),
-        light.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(170.0, 97.0, 3.0),
-        Vec3::new(50.0, 0.0, 0.0),
-        Vec3::new(0.0, 3.0, 0.0),
-        light.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(170.0, 100.0, 0.0),
-        Vec3::new(0.0, 0.0, 3.0),
-        Vec3::new(0.0, -3.0, 0.0),
-        light.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(220.0, 100.0, 0.0),
-        Vec3::new(0.0, -3.0, 0.0),
-        Vec3::new(0.0, 0.0, 3.0),
-        light.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(50.0, 0.0, 400.0),
-        Vec3::new(290.0, 0.0, 0.0),
-        Vec3::new(0.0, 100.0, 0.0),
-        background.clone(),
-    )));
-
-    let box1 = quad::make_box(
-        Point3::new(339.0, 0.0, 0.0),
-        Point3::new(311.0, 90.0, 30.0),
-        kachi.clone(),
-    );
-
-    world.add(box1);
-
-    let box1image = Arc::new(Quad::new(
-        Point3::new(311.0, 0.0, 30.0),
-        Vec3::new(28.0, 0.0, 0.0),
-        Vec3::new(0.0, 90.0, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "box1image.jpg",
-        )))),
-    ));
-    world.add(box1image);
-
-    let box2 = quad::make_box(
-        Point3::new(281.0, 0.0, 0.0),
-        Point3::new(309.0, 40.0, 27.0),
-        kachi.clone(),
-    );
-
-    world.add(box2);
-
-    let box2image = Arc::new(Quad::new(
-        Point3::new(281.0, 0.0, 27.0),
-        Vec3::new(28.0, 0.0, 0.0),
-        Vec3::new(0.0, 40.0, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "box2image.jpg",
-        )))),
-    ));
-    world.add(box2image);
-
-    let box3 = quad::make_box(
-        Point3::new(61.0, 0.0, 0.0),
-        Point3::new(90.0, 30.0, 30.0),
-        kachi.clone(),
-    );
-
-    world.add(box3);
-
-    let box3image = Arc::new(Quad::new(
-        Point3::new(61.0, 0.0, 30.0),
-        Vec3::new(29.0, 0.0, 0.0),
-        Vec3::new(0.0, 30.0, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "box3image.jpg",
-        )))),
-    ));
-    world.add(box3image);
-
-    let box4 = quad::make_box(
-        Point3::new(78.0, 0.0, 40.0),
-        Point3::new(102.0, 22.0, 77.0),
-        kachi.clone(),
-    );
-
-    let box4 = Arc::new(RotateY::new(box4, 20.0));
-
-    world.add(box4);
-
-    let box5 = quad::make_box(
-        Point3::new(102.0, 22.0, 22.0),
-        Point3::new(117.0, 40.0, 42.0),
-        kachi.clone(),
-    );
-
-    world.add(box5);
-
-    let box5image = Arc::new(Quad::new(
-        Point3::new(102.0, 22.0, 42.0),
-        Vec3::new(15.0, 0.0, 0.0),
-        Vec3::new(0.0, 18.0, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "box5image.jpg",
-        )))),
-    ));
-    world.add(box5image);
-
-    let board1 = quad::make_box(
-        Point3::new(140.0, 0.0, 5.0),
-        Point3::new(240.0, 0.5, 55.0),
-        kachi.clone(),
-    );
-    world.add(board1);
-
-    let board2 = quad::make_box(
-        Point3::new(130.0, 0.5, 15.0),
-        Point3::new(225.0, 1.2, 65.0),
-        dark_gray.clone(),
-    );
-    world.add(board2);
-
-    let box6 = quad::make_box(
-        Point3::new(248.0, 0.0, 13.0),
-        Point3::new(270.0, 15.0, 35.5),
-        kachi.clone(),
-    );
-
-    world.add(box6);
-
-    let box6image = Arc::new(Quad::new(
-        Point3::new(248.0, 0.0, 35.5),
-        Vec3::new(22.0, 0.0, 0.0),
-        Vec3::new(0.0, 15.0, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "box6image.jpg",
-        )))),
-    ));
-    world.add(box6image);
-
-    let clue1 = Arc::new(Quad::new(
-        Point3::new(172.0, 23.5, 0.01),
-        Vec3::new(17.5, 0.0, 0.0),
-        Vec3::new(0.0, 24.5, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new("clue1.jpg")))),
-    ));
-    world.add(clue1);
-
-    let clue3 = Arc::new(Quad::new(
-        Point3::new(200.0, 26.5, 0.01),
-        Vec3::new(17.5, 0.0, 0.0),
-        Vec3::new(0.0, 24.5, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new("clue3.jpg")))),
-    ));
-    world.add(clue3);
-
-    let clue6 = Arc::new(Quad::new(
-        Point3::new(191.0, 10.5, 0.01),
-        Vec3::new(17.5, 0.0, 0.0),
-        Vec3::new(0.0, 24.5, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new("clue6.jpg")))),
-    ));
-    world.add(clue6);
-
-    let whiteboard = Arc::new(obj::load_obj_model("objects/whiteboard.obj", 35.0));
-    let whiteboard = Arc::new(Translate::new(whiteboard, Vec3::new(130.0, 60.0, 3.0)));
-
-    world.add(whiteboard);
-
-    let whiteboard_content = Arc::new(Quad::new(
-        Point3::new(95.0, 42.5, 3.0),
-        Vec3::new(70.0, 0.0, 0.0),
-        Vec3::new(0.0, 35.0, 0.0),
-        Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "Its_Raytracer!!!!.jpg",
-        )))),
-    ));
-    world.add(whiteboard_content);
-
-    let computer = Arc::new(obj::load_obj_model("objects/computer.obj", 1.0));
-    let computer = Arc::new(RotateY::new(computer, 270.0));
-    let computer = Arc::new(Translate::new(computer, Vec3::new(252.0, 20.0, 53.0)));
-
-    world.add(computer);
-
-    let grumble = Arc::new(Sphere::static_new(
-        Point3::new(70.0, 15.0, 60.0),
+    let rotated = Arc::new(RotateY::new(
+        Arc::new(BVHNode::new_from_list(&mut boxes2)),
         15.0,
-        Some(Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "grumble.jpg",
-        ))))),
     ));
+    let translated = Arc::new(Translate::new(rotated, Vec3::new(-100.0, 270.0, 395.0)));
+    world.add(translated);
 
-    world.add(grumble);
+    let mut camera = Camera::new(1.0, 400);
+    camera.aspect_ratio = 1.0;
+    camera.image_width = image_width;
+    camera.samples_per_pixel = samples_per_pixel as u32;
+    camera.max_depth = max_depth;
+    camera.background = Color::new(0.0, 0.0, 0.0);
 
-    let bloodywolf = Arc::new(Sphere::static_new(
-        Point3::new(325.0, 15.0, 50.0),
-        15.0,
-        Some(Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "bloodywolf.jpg",
-        ))))),
-    ));
+    camera.vfov = 40.0;
+    camera.lookfrom = Point3::new(478.0, 278.0, -600.0);
+    camera.lookat = Point3::new(278.0, 278.0, 0.0);
+    camera.vup = Vec3::new(0.0, 1.0, 0.0);
+    camera.defocus_angle = 0.0;
 
-    world.add(bloodywolf);
-
-    let magiczc = Arc::new(Sphere::static_new(
-        Point3::new(85.0, 9.0, 70.0),
-        9.0,
-        Some(Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-            "magiczc.png",
-        ))))),
-    ));
-
-    world.add(magiczc);
-
-    let sphere = Arc::new(Sphere::static_new(
-        Point3::new(304.0, 10.0, 48.0),
-        10.0,
-        Some(Arc::new(Dielectric::new(1.8))),
-    ));
-
-    world.add(sphere);
-
-    let anon = Arc::new(Sphere::static_new(
-        Point3::new(153.0, 17.0, 43.0),
-        17.0,
-        Some(Arc::new(DiffuseLight::new_from_texture(Arc::new(
-            ImageTexture::new("anon.png"),
-        )))),
-    ));
-
-    world.add(anon);
-
-    let metal = Arc::new(Sphere::static_new(
-        Point3::new(59.0, 6.0, 79.0),
-        6.0,
-        Some(Arc::new(Metal::new(Color::new(0.6, 0.9, 0.6), 0.2))),
-    ));
-
-    world.add(metal);
-
-    let empty_material: Arc<dyn Material> = Arc::new(material::EmptyMaterial);
-
-    let mut lights = HittableList::new();
-    lights.add(Arc::new(Quad::new(
-        Point3::new(170.0, 97.0, 0.0),
-        Vec3::new(50.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 3.0),
-        empty_material.clone(),
-    )));
-
-    lights.add(Arc::new(Quad::new(
-        Point3::new(170.0, 97.0, 3.0),
-        Vec3::new(50.0, 0.0, 0.0),
-        Vec3::new(0.0, 3.0, 0.0),
-        empty_material.clone(),
-    )));
-
-    lights.add(Arc::new(Quad::new(
-        Point3::new(50.0, 0.0, 400.0),
-        Vec3::new(290.0, 0.0, 0.0),
-        Vec3::new(0.0, 100.0, 0.0),
-        empty_material.clone(),
-    )));
-
-    let lights = Arc::new(lights);
-
-    let mut cam = Camera::new(2.0, 600);
-
-    cam.aspect_ratio = 2.5;
-    cam.image_width = 2400;
-    cam.samples_per_pixel = 2000;
-    cam.max_depth = 50;
-    cam.background = Color::new(0.18, 0.18, 0.18);
-
-    cam.vfov = 30.0;
-    cam.lookfrom = Point3::new(195.0, 50.0, 300.0);
-    cam.lookat = Point3::new(195.0, 50.0, 0.0);
-    cam.vup = Vec3::new(0.0, 1.0, 0.0);
-
-    cam.defocus_angle = 0.0;
-    cam.initialize();
-    cam.render(&world, lights, &mut out)?;
+    let lights = Arc::new(HittableList::new());
+    camera.initialize();
+    camera.render(&world, lights, &mut out)?;
 
     Ok(())
 }
 
 fn main() -> io::Result<()> {
-    final_scene()
+    final_scene(800, 1000, 10)
 }

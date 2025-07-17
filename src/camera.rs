@@ -1,14 +1,13 @@
 use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
-use crate::material::scatter_record;
-use crate::pdf::{CosinePdf, HittablePdf, MixturePdf, Pdf, SpherePdf};
+use crate::material::ScatterRecord;
+use crate::pdf::HittablePdf;
 use crate::ray::Ray;
+use crate::rtweekend;
 use crate::rtweekend::{INFINITY, degrees_to_radians};
 use crate::vec3::{Point3, Vec3};
-use crate::{color, rtweekend};
 use rayon::prelude::*;
-use std::f64::consts::PI;
 use std::io::{self, Write};
 use std::sync::Arc;
 
@@ -45,7 +44,7 @@ impl Camera {
         r: &Ray,
         depth: usize,
         world: &dyn Hittable,
-        lights: Arc<dyn Hittable>,
+        _lights: Arc<dyn Hittable>,
     ) -> Color {
         if depth == 0 {
             return Color::new(0.0, 0.0, 0.0);
@@ -54,9 +53,9 @@ impl Camera {
         if !world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
             return self.background;
         }
-        let mut srec = scatter_record::default();
-        let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
-        let mut pdf_value = 0.0;
+        let mut srec = ScatterRecord::default();
+        let mut _scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+        let mut _pdf_value = 0.0;
         if rec.mat.is_some() {
             let rec_ = rec.clone();
             let color_from_emission = rec
@@ -64,27 +63,27 @@ impl Camera {
                 .mat
                 .unwrap()
                 .emitted(r, &rec, rec.u, rec.v, &rec.p);
-            let mut color_from_scatter = Color::new(0.0, 0.0, 0.0);
+            let mut _color_from_scatter = Color::new(0.0, 0.0, 0.0);
             let rec__ = rec_.clone();
             if !rec_.mat.unwrap().scatter(r, &rec__, &mut srec) {
                 return color_from_emission;
             }
-            if (srec.skip_pdf) {
+            if srec.skip_pdf {
                 return srec.attenuation
-                    * self.ray_color(&srec.skip_pdf_ray, depth - 1, world, lights);
+                    * self.ray_color(&srec.skip_pdf_ray, depth - 1, world, _lights);
             }
-            let light_ptr = Arc::new(HittablePdf::new(lights.clone(), rec.p));
-            let mixed_pdf = MixturePdf::new(light_ptr, srec.pdf_ptr.unwrap());
+            let _light_ptr = Arc::new(HittablePdf::new(_lights.clone(), rec.p));
+            let mixed_pdf = srec.pdf_ptr.unwrap();
 
-            scattered = Ray::new_with_time(rec.p, mixed_pdf.generate(), r.time());
-            pdf_value = mixed_pdf.value(scattered.direction());
+            _scattered = Ray::new_with_time(rec.p, mixed_pdf.generate(), r.time());
+            _pdf_value = mixed_pdf.value(_scattered.direction());
 
-            let scattering_pdf = rec.mat.unwrap().scattering_pdf(&r, &rec__, &scattered);
+            let scattering_pdf = rec.mat.unwrap().scattering_pdf(&r, &rec__, &_scattered);
 
-            let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
+            let sample_color = self.ray_color(&_scattered, depth - 1, world, _lights);
 
-            color_from_scatter = srec.attenuation * scattering_pdf * sample_color / pdf_value;
-            return color_from_emission + color_from_scatter;
+            _color_from_scatter = srec.attenuation * scattering_pdf * sample_color / _pdf_value;
+            return color_from_emission + _color_from_scatter;
         }
         Color::new(0.0, 0.0, 0.0)
     }
@@ -159,7 +158,7 @@ impl Camera {
         self.defocus_disk_v = self.v * defocus_radius;
     }
 
-    pub fn sample_square(&self) -> Vec3 {
+    pub fn _sample_square(&self) -> Vec3 {
         Vec3::new(
             rtweekend::random_double() - 0.5,
             rtweekend::random_double() - 0.5,
@@ -178,7 +177,7 @@ impl Camera {
             + self.pixel_delta_u * (i as f64 + offset.x())
             + self.pixel_delta_v * (j as f64 + offset.y());
 
-        let ray_origin = if (self.defocus_angle <= 0.0) {
+        let ray_origin = if self.defocus_angle <= 0.0 {
             self.center
         } else {
             self.defocus_sample()
@@ -220,9 +219,9 @@ impl Camera {
                         for s_i in 0..self.sqrt_spp {
                             let r = self.get_ray(i, j, s_i, s_j);
                             let r_col = self.ray_color(&r, self.max_depth, world, lights.clone());
-                            if (r_col.x() != r_col.x()
+                            if r_col.x() != r_col.x()
                                 || r_col.y() != r_col.y()
-                                || r_col.z() != r_col.z())
+                                || r_col.z() != r_col.z()
                             {
                                 valid_samples -= 1.0;
                             } else {

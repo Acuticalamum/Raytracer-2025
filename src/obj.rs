@@ -8,7 +8,7 @@ use crate::vec3::Point3;
 use std::sync::Arc;
 use tobj;
 
-pub fn load_obj_model(path: &str, scale: f64) -> HittableList {
+pub fn _load_obj_model(path: &str, scale: f64) -> HittableList {
     let mut object = HittableList::new();
 
     let (models, materials) = tobj::load_obj(
@@ -77,10 +77,10 @@ pub fn load_obj_model(path: &str, scale: f64) -> HittableList {
                     positions[idx2 * 3 + 2] as f64 * scale,
                 ),
             );
-            let triangle = Triangle::new_with_points(v0, v1, v2, cur_mat.clone());
+            let triangle = Triangle::_new_with_points(v0, v1, v2, cur_mat.clone());
             object.add(Arc::new(triangle));
         }
     }
-    let object = HittableList::from(Arc::new(BVHNode::new_from_list(&mut object)));
+    let object = HittableList::_from(Arc::new(BVHNode::new_from_list(&mut object)));
     object
 }

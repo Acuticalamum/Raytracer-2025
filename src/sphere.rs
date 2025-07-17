@@ -25,7 +25,7 @@ impl Sphere {
             bbox: AABB::from_points(static_center - rvec, static_center + rvec),
         }
     }
-    pub fn new(
+    pub fn _new(
         center1: Point3,
         center2: Point3,
         radius: f64,
@@ -43,9 +43,9 @@ impl Sphere {
     }
     pub fn get_sphere_uv(p: &Point3, u: &mut f64, v: &mut f64) {
         let theta = (-p.y).acos();
-        let phi = (-p.z).atan2(p.x) + std::f64::consts::PI;
-        *u = phi / (2.0 * std::f64::consts::PI);
-        *v = theta / std::f64::consts::PI;
+        let phi = (-p.z).atan2(p.x) + PI;
+        *u = phi / (2.0 * PI);
+        *v = theta / PI;
     }
 }
 

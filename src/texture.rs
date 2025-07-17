@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::perlin::Perlin;
 use crate::rtw_stb_image::RtwImage;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::Point3;
 use std::sync::Arc;
 
 pub trait Texture: Sync + Send {
@@ -17,7 +17,7 @@ impl SolidColor {
         SolidColor { albedo }
     }
 
-    pub fn from_rgb(red: f64, green: f64, blue: f64) -> Self {
+    pub fn _from_rgb(red: f64, green: f64, blue: f64) -> Self {
         SolidColor {
             albedo: Color::new(red, green, blue),
         }
@@ -37,7 +37,7 @@ pub struct CheckerTexture {
 }
 
 impl CheckerTexture {
-    pub fn new(scale: f64, even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
+    pub fn _new(scale: f64, even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
         Self {
             inv_scale: 1.0 / scale,
             even,
@@ -45,8 +45,8 @@ impl CheckerTexture {
         }
     }
 
-    pub fn from_colors(scale: f64, c1: Color, c2: Color) -> Self {
-        Self::new(
+    pub fn _from_colors(scale: f64, c1: Color, c2: Color) -> Self {
+        Self::_new(
             scale,
             Arc::new(SolidColor::new(c1)),
             Arc::new(SolidColor::new(c2)),
@@ -112,9 +112,9 @@ pub struct NoiseTexture {
 }
 
 impl NoiseTexture {
-    pub fn new(scale: f64) -> Self {
+    pub fn _new(scale: f64) -> Self {
         Self {
-            noise: Perlin::new(),
+            noise: Perlin::_new(),
             scale,
         }
     }

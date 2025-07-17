@@ -1,19 +1,17 @@
-use stb_image::image::{Image, LoadResult, load_with_depth};
+use stb_image::image::{LoadResult, load_with_depth};
 use std::env;
-use std::fs;
-use std::path::Path;
 
 pub struct RtwImage {
     bytes_per_pixel: usize,
-    fdata: Option<Vec<f32>>, // Linear floating-point pixel data
-    bdata: Option<Vec<u8>>,  // Linear 8-bit pixel data
+    fdata: Option<Vec<f32>>,
+    bdata: Option<Vec<u8>>,
     image_width: usize,
     image_height: usize,
     bytes_per_scanline: usize,
 }
 
 impl RtwImage {
-    pub fn default() -> Self {
+    pub fn _default() -> Self {
         RtwImage {
             bytes_per_pixel: 3,
             fdata: None,

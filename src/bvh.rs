@@ -3,7 +3,6 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::rtweekend;
 use std::cmp::Ordering;
 use std::sync::Arc;
 
@@ -66,8 +65,8 @@ impl BVHNode {
             objects[start..end].sort_by(comparator);
             let mid = start + object_span / 2;
             (
-                Some((Arc::new(BVHNode::new(objects, start, mid))) as Arc<dyn Hittable>),
-                Some((Arc::new(BVHNode::new(objects, mid, end))) as Arc<dyn Hittable>),
+                Some(Arc::new(BVHNode::new(objects, start, mid)) as Arc<dyn Hittable>),
+                Some(Arc::new(BVHNode::new(objects, mid, end)) as Arc<dyn Hittable>),
             )
         };
         //let bbox = AABB::from_boxes(left.as_ref().unwrap().bounding_box(), right.as_ref().unwrap().bounding_box());

@@ -19,7 +19,7 @@ pub struct Quad {
     mat: Arc<dyn Material>,
     bbox: AABB,
     normal: Vec3,
-    D: f64,
+    d: f64,
     area: f64,
 }
 
@@ -27,7 +27,7 @@ impl Quad {
     pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material>) -> Self {
         let n = Vec3::cross(u, v);
         let normal = Vec3::unit_vector(n);
-        let D = Vec3::dot(q, normal);
+        let d = Vec3::dot(q, normal);
         let w = n / Vec3::dot(n, n);
         let area = n.length();
         let mut quad = Self {
@@ -38,7 +38,7 @@ impl Quad {
             mat,
             bbox: AABB::empty(),
             normal,
-            D,
+            d,
             area,
         };
         quad.set_bounding_box();
@@ -120,7 +120,7 @@ impl Hittable for Quad {
             return false;
         }
 
-        let t = (self.D - Vec3::dot(self.normal, r.origin())) / denom;
+        let t = (self.d - Vec3::dot(self.normal, r.origin())) / denom;
 
         if !ray_t.contains(t) {
             return false;

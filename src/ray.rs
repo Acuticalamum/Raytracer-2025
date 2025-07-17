@@ -1,5 +1,3 @@
-// ray.rs
-
 use crate::vec3::{Point3, Vec3};
 use std::f64;
 

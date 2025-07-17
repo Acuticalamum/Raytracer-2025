@@ -1,6 +1,5 @@
 use crate::rtweekend;
 use crate::rtweekend::random_double;
-use rand::Rng;
 use std::f64;
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -40,16 +39,12 @@ impl Vec3 {
     pub fn length_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
-    pub fn near_zero(&self) -> bool {
+    pub fn _near_zero(&self) -> bool {
         const EPS: f64 = 1e-8;
         self.x < EPS && self.y < EPS && self.z < EPS
     }
-    pub fn random() -> Self {
-        Vec3::new(
-            rtweekend::random_double(),
-            rtweekend::random_double(),
-            rtweekend::random_double(),
-        )
+    pub fn _random() -> Self {
+        Vec3::new(random_double(), random_double(), random_double())
     }
     pub fn random_range(min: f64, max: f64) -> Self {
         Vec3::new(
@@ -70,7 +65,7 @@ impl Vec3 {
             }
         }
     }
-    pub fn random_on_hemisphere(normal: Vec3) -> Self {
+    pub fn _random_on_hemisphere(normal: Vec3) -> Self {
         let on_unit_sphere = Vec3::random_unit_vector();
         if Vec3::dot(on_unit_sphere, normal) > 0.0 {
             on_unit_sphere
@@ -85,7 +80,7 @@ impl Vec3 {
                 rtweekend::random_double_range(-1.0, 1.0),
                 0.0,
             );
-            if (p.length_squared() < 1.0) {
+            if p.length_squared() < 1.0 {
                 return p;
             }
         }
@@ -94,7 +89,7 @@ impl Vec3 {
         let r1: f64 = random_double();
         let r2: f64 = random_double();
 
-        let phi = 2.0 * std::f64::consts::PI * r1;
+        let phi = 2.0 * f64::consts::PI * r1;
         let x = phi.cos() * r2.sqrt();
         let y = phi.sin() * r2.sqrt();
         let z = (1.0 - r2).sqrt();
