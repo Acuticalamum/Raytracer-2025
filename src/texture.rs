@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::perlin::Perlin;
 use crate::rtw_stb_image::RtwImage;
-use crate::vec3::Point3;
+use crate::vec3::{Point3, Vec3};
 use std::sync::Arc;
 
 pub trait Texture: Sync + Send {
@@ -124,5 +124,48 @@ impl Texture for NoiseTexture {
     fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
         let scaled_p = *p * self.scale;
         Color::new(0.5, 0.5, 0.5) * (1.0 + (scaled_p.z() + 10.0 * self.noise.turb(*p, 7)).sin())
+    }
+}
+
+pub struct NormalTexture {
+    image: RtwImage,
+    albedo: Color,
+}
+
+impl NormalTexture {
+    pub fn _new(filename: &str, albedo: Color) -> Self {
+        Self {
+            image: RtwImage::new(filename),
+            albedo,
+        }
+    }
+}
+
+impl Texture for NormalTexture {
+    fn value(&self, mut _u: f64, mut _v: f64, _p: &Point3) -> Color {
+        self.albedo
+    }
+}
+
+impl NormalTexture {
+    pub fn normal(&self, mut u: f64, mut v: f64, _p: &Point3) -> Vec3 {
+        if self.image.height() == 0 {
+            return Color::new(0.0, 1.0, 1.0);
+        }
+
+        u = u.clamp(0.0, 1.0);
+        v = 1.0 - v.clamp(0.0, 1.0);
+
+        let i = (u * self.image.width() as f64) as usize;
+        let j = (v * self.image.height() as f64) as usize;
+
+        let pixel = self.image.pixel_data(i, j);
+        let scale = 1.0 / 255.0;
+
+        let r = scale * pixel[0] as f64;
+        let g = scale * pixel[1] as f64;
+        let b = scale * pixel[2] as f64;
+
+        Color::new(2.0 * r - 1.0, 2.0 * g - 1.0, 2.0 * b - 1.0)
     }
 }

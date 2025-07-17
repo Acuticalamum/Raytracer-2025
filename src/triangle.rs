@@ -1,3 +1,4 @@
+use crate::texture::NormalTexture;
 use crate::{
     aabb::AABB,
     hittable::{HitRecord, Hittable},
@@ -19,6 +20,10 @@ pub struct Triangle {
     normal: Vec3,
     d: f64,
     area: f64,
+    pub uv0: Point3,
+    pub uv1: Point3,
+    pub uv2: Point3,
+    normal_map: Option<Arc<NormalTexture>>,
 }
 
 impl Triangle {
@@ -32,7 +37,7 @@ impl Triangle {
         let d = Vec3::dot(q, normal);
         let w = n / Vec3::dot(n, n);
         let area = n.length() / 2.0;
-        let mut quad = Self {
+        let mut triangle = Self {
             q,
             u,
             v,
@@ -42,9 +47,13 @@ impl Triangle {
             normal,
             d,
             area,
+            uv0: Point3::new(0.0, 0.0, 0.0),
+            uv1: Point3::new(1.0, 0.0, 0.0),
+            uv2: Point3::new(0.0, 1.0, 0.0),
+            normal_map: None,
         };
-        quad._set_bounding_box();
-        quad
+        triangle._set_bounding_box();
+        triangle
     }
 
     fn _set_bounding_box(&mut self) {
@@ -96,6 +105,37 @@ impl Hittable for Triangle {
         rec.p = intersection;
         rec.mat = Some(Arc::clone(&self.mat));
         rec.set_face_normal(r, self.normal);
+
+        let p0 = self.q;
+        let p1 = self.q + self.u;
+        let p2 = self.q + self.v;
+
+        let uv0 = self.uv0;
+        let uv1 = self.uv1;
+        let uv2 = self.uv2;
+
+        let edge1 = p1 - p0;
+        let edge2 = p2 - p0;
+        let delta_uv1 = uv1 - uv0;
+        let delta_uv2 = uv2 - uv0;
+
+        let f = 1.0 / (delta_uv1.x * delta_uv2.y - delta_uv2.x * delta_uv1.y);
+        let tangent = (edge1 * delta_uv2.y - edge2 * delta_uv1.y) * f;
+        let bitangent = (edge2 * delta_uv1.x - edge1 * delta_uv2.x) * f;
+
+        rec.tangent = Vec3::unit_vector(tangent);
+        rec.bitangent = Vec3::unit_vector(bitangent);
+
+        if let Some(normal_map) = &self.normal_map {
+            let normal = normal_map.normal(rec.u, rec.v, &rec.p);
+
+            let t = rec.tangent;
+            let b = rec.bitangent;
+            let n = rec.normal;
+
+            let world_normal = Vec3::unit_vector(t * normal.x() + b * normal.y() + n * normal.z());
+            rec.set_face_normal(r, world_normal);
+        }
 
         true
     }

@@ -14,6 +14,8 @@ pub struct HitRecord {
     pub front_face: bool,
     pub u: f64,
     pub v: f64,
+    pub tangent: Vec3,
+    pub bitangent: Vec3,
 }
 impl HitRecord {
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
@@ -36,6 +38,8 @@ impl Default for HitRecord {
             front_face: true,
             u: 0.0,
             v: 0.0,
+            tangent: Vec3::zero(),
+            bitangent: Vec3::zero(),
         }
     }
 }
