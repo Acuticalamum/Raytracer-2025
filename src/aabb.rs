@@ -3,6 +3,7 @@ use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
 use std::ops::Add;
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy)]
 pub struct AABB {
     pub x: Interval,
@@ -66,8 +67,10 @@ impl AABB {
     pub fn longest_axis(&self) -> usize {
         if self.x.size() > self.y.size() {
             if self.x.size() > self.z.size() { 0 } else { 2 }
+        } else if self.y.size() > self.z.size() {
+            1 
         } else {
-            if self.y.size() > self.z.size() { 1 } else { 2 }
+            2
         }
     }
 

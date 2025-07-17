@@ -60,7 +60,7 @@ impl Vec3 {
         loop {
             let p = Vec3::random_range(-1.0, 1.0);
             let lensq = p.length_squared();
-            if 1e-160 <= lensq && lensq <= 1.0 {
+            if (1e-160..=1.0).contains(&lensq) {
                 return p / lensq.sqrt();
             }
         }

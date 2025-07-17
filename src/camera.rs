@@ -78,7 +78,7 @@ impl Camera {
             _scattered = Ray::new_with_time(rec.p, mixed_pdf.generate(), r.time());
             _pdf_value = mixed_pdf.value(_scattered.direction());
 
-            let scattering_pdf = rec.mat.unwrap().scattering_pdf(&r, &rec__, &_scattered);
+            let scattering_pdf = rec.mat.unwrap().scattering_pdf(r, &rec__, &_scattered);
 
             let sample_color = self.ray_color(&_scattered, depth - 1, world, _lights);
 

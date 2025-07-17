@@ -7,7 +7,6 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
-mod obj;
 mod onb;
 mod pdf;
 mod perlin;
@@ -35,6 +34,7 @@ use std::fs::File;
 use std::io::{self, BufWriter};
 use std::sync::Arc;
 use vec3::{Point3, Vec3};
+#[allow(clippy::upper_case_acronyms)]
 
 fn final_scene(image_width: usize, samples_per_pixel: usize, max_depth: usize) -> io::Result<()> {
     let path = std::path::Path::new("output/book2/Image23.ppm");

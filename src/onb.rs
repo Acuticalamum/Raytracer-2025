@@ -1,6 +1,7 @@
 use crate::vec3;
 use vec3::Vec3;
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Debug)]
 pub struct ONB {
     axis: [Vec3; 3],
