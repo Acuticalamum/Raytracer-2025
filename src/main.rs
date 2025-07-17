@@ -35,7 +35,6 @@ use std::io::{self, BufWriter};
 use std::sync::Arc;
 use vec3::{Point3, Vec3};
 #[allow(clippy::upper_case_acronyms)]
-
 fn final_scene(image_width: usize, samples_per_pixel: usize, max_depth: usize) -> io::Result<()> {
     let path = std::path::Path::new("output/book2/Image23.ppm");
     let prefix = path.parent().unwrap();

@@ -43,12 +43,12 @@ impl BVHNode {
     }
     pub fn new(objects: &mut Vec<Arc<dyn Hittable>>, start: usize, end: usize) -> Self {
         let mut bbox = AABB::empty();
-        for object_index in start..end {
-            bbox = AABB::from_boxes(bbox, objects[object_index].bounding_box());
+        for object in objects.iter().take(end).skip(start) {
+            bbox = AABB::from_boxes(bbox, object.clone().bounding_box());
         }
         let axis = bbox.longest_axis();
-        let comparator: Box<dyn Fn(&Arc<dyn Hittable>, &Arc<dyn Hittable>) -> Ordering> = match axis
-        {
+        type HittableComparator = Box<dyn Fn(&Arc<dyn Hittable>, &Arc<dyn Hittable>) -> Ordering>;
+        let comparator: HittableComparator = match axis {
             0 => Box::new(BVHNode::box_x_compare),
             1 => Box::new(BVHNode::box_y_compare),
             _ => Box::new(BVHNode::box_z_compare),

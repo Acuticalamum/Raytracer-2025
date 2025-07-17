@@ -17,8 +17,8 @@ impl Perlin {
         let mut rng = rand::rng();
 
         let mut rand_vec = [Vec3::zero(); POINT_COUNT];
-        for i in 0..POINT_COUNT {
-            rand_vec[i] = Vec3::unit_vector(Vec3::random_range(-1.0, 1.0));
+        for val in rand_vec.iter_mut().take(POINT_COUNT) {
+            *val = Vec3::unit_vector(Vec3::random_range(-1.0, 1.0));
         }
 
         let perm_x = Self::_generate_perm(&mut rng);
@@ -44,13 +44,13 @@ impl Perlin {
 
         let mut c = [[[Vec3::zero(); 2]; 2]; 2];
 
-        for di in 0..2 {
-            for dj in 0..2 {
-                for dk in 0..2 {
+        for (di, plane) in c.iter_mut().enumerate() {
+            for (dj, row) in plane.iter_mut().enumerate() {
+                for (dk, val) in row.iter_mut().enumerate() {
                     let idx = self.perm_x[(i + di) & 255]
                         ^ self.perm_y[(j + dj) & 255]
                         ^ self.perm_z[(k + dk) & 255];
-                    c[di][dj][dk] = self.rand_vec[idx];
+                    *val = self.rand_vec[idx];
                 }
             }
         }
@@ -90,14 +90,14 @@ impl Perlin {
         let ww = w * w * (3.0 - 2.0 * w);
 
         let mut accum = 0.0;
-        for i in 0..2 {
-            for j in 0..2 {
-                for k in 0..2 {
+        for (i, plane) in c.iter().enumerate() {
+            for (j, row) in plane.iter().enumerate() {
+                for (k, &val) in row.iter().enumerate() {
                     let weight_v = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
                     let weight = (i as f64 * uu + (1.0 - i as f64) * (1.0 - uu))
                         * (j as f64 * vv + (1.0 - j as f64) * (1.0 - vv))
                         * (k as f64 * ww + (1.0 - k as f64) * (1.0 - ww));
-                    accum += weight * Vec3::dot(weight_v, c[i][j][k]);
+                    accum += weight * Vec3::dot(weight_v, val);
                 }
             }
         }
